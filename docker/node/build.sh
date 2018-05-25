@@ -36,7 +36,7 @@ case "${network}" in
 esac
 
 REPO_ROOT=`git rev-parse --show-toplevel`
-COMMIT_SHA=`git rev-parse --short HEAD`
+GIT_COMMIT=`git rev-parse HEAD | cut -c-3`
 pushd $REPO_ROOT
-docker build --build-arg NETWORK="${network}" -f docker/node/Dockerfile -t raiblocks-node${network_tag}:latest .
+docker build --build-arg NETWORK="${network}" --build-arg GIT_COMMIT="${GIT_COMMIT}" -f docker/node/Dockerfile -t raiblocks-node${network_tag}:latest .
 popd

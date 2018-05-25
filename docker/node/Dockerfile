@@ -10,15 +10,23 @@ RUN apt-get update -qq && apt-get install -yqq \
     build-essential \
     cmake \
     g++ \
-    wget && \
+    wget \
+    libssl-dev && \
     /tmp/ci/bootstrap_boost.sh -m
 
 ADD ./ /tmp/src
 
+ARG GIT_COMMIT
+ENV GIT_COMMIT ${GIT_COMMIT}
 RUN mkdir /tmp/build && \
     cd /tmp/build && \
-    cmake /tmp/src -DBOOST_ROOT=${BOOST_ROOT} -DACTIVE_NETWORK=rai_${NETWORK}_network && \
-    make rai_node && \
+    cmake /tmp/src \
+        -DDISABLE_NATIVE_ARCH=ON \
+        -DRAIBLOCKS_SECURE_RPC=ON \
+        -DBOOST_ROOT=${BOOST_ROOT} \
+        -DACTIVE_NETWORK=rai_${NETWORK}_network \
+        -DGIT_COMMIT=${GIT_COMMIT} && \
+    cmake --build . --config Release --target rai_node -- -j && \
     cd .. && \
     echo ${NETWORK} > /etc/nano-network
 
