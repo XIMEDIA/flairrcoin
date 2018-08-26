@@ -2376,8 +2376,8 @@ TEST (ledger, could_fit)
 	ledger.epoch_link = 123;
 	ledger.epoch_signer = epoch_signer.pub;
 	rai::genesis genesis;
-	rai::transaction transaction (store.environment, true);
-	store.initialize (transaction, genesis);
+	rai::transaction transaction (store.environment, nullptr, true);
+	genesis.initialize (transaction, store);
 	rai::keypair destination;
 	// Test legacy and state change blocks could_fit
 	rai::change_block change1 (genesis.hash (), rai::genesis_account, rai::test_genesis_key.prv, rai::test_genesis_key.pub, 0);
