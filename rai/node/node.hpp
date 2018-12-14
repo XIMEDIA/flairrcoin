@@ -529,9 +529,11 @@ public:
 class thread_runner
 {
 public:
-	thread_runner (boost::asio::io_service &, unsigned);
+	thread_runner (rai::stat &, boost::asio::io_service &, unsigned);
 	~thread_runner ();
 	void join ();
+	rai::stat & stats;
+	boost::asio::io_service & service;
 	std::vector<boost::thread> threads;
 };
 class inactive_node

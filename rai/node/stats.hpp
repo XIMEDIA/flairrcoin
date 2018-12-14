@@ -186,7 +186,8 @@ public:
 		vote,
 		http_callback,
 		peering,
-		udp
+		udp,
+		performance,
 	};
 
 	/** Optional detail type */
@@ -248,6 +249,9 @@ public:
 
 		// peering
 		handshake,
+		
+		// performance
+		io_overrun,
 	};
 
 	/** Direction of the stat. If the direction is irrelevant, use in */

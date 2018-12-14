@@ -3480,17 +3480,28 @@ int rai::node::store_version ()
 	return store.version_get (transaction);
 }
 
-rai::thread_runner::thread_runner (boost::asio::io_service & service_a, unsigned service_threads_a)
+rai::thread_runner::thread_runner (rai::stat & stats_a, boost::asio::io_service & service_a, unsigned service_threads_a) :
+stats (stats_a),
+service (service_a)
 {
 	boost::thread::attributes attrs;
 	rai::thread_attributes::set (attrs);
 	for (auto i (0); i < service_threads_a; ++i)
 	{
-		threads.push_back (boost::thread (attrs, [&service_a]() {
+		threads.push_back (boost::thread (attrs, [this]() {
 			rai::thread_role::set (rai::thread_role::name::io);
 			try
 			{
-				service_a.run ();
+				unsigned count (1);
+				while (count != 0)
+				{
+					auto overrun (std::chrono::steady_clock::now () + std::chrono::milliseconds (250));
+					count = service.run_one ();
+					if (std::chrono::steady_clock::now () > overrun)
+					{
+						stats.inc (rai::stat::type::performance, rai::stat::detail::io_overrun);
+					}
+				}
 			}
 			catch (...)
 			{

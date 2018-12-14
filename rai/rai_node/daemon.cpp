@@ -129,7 +129,7 @@ void rai_daemon::daemon::run (boost::filesystem::path const & data_path, rai::no
 				{
 					rpc->start ();
 				}
-				runner = std::make_unique<rai::thread_runner> (service, node->config.io_threads);
+				runner = std::make_unique<rai::thread_runner> (node->stats, service, node->config.io_threads);
 				runner->join ();
 			}
 			else

@@ -261,7 +261,7 @@ int run_wallet (QApplication & application, int argc, char * const * argv, boost
 			{
 				rpc->start ();
 			}
-			rai::thread_runner runner (service, node->config.io_threads);
+			rai::thread_runner runner (node->stats, service, node->config.io_threads);
 			QObject::connect (&application, &QApplication::aboutToQuit, [&]() {
 				rpc->stop ();
 				node->stop ();

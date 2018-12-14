@@ -351,6 +351,8 @@ std::string rai::stat::type_to_string (uint32_t key)
 		case rai::stat::type::message:
 			res = "message";
 			break;
+		case rai::stat::type::performance:
+			res = "performance";
 	}
 	return res;
 }
@@ -480,6 +482,9 @@ std::string rai::stat::detail_to_string (uint32_t key)
 			break;
 		case rai::stat::detail::outdated_version:
 			res = "outdated_version";
+			break;
+		case rai::stat::detail::io_overrun:
+			res = "io_overrun";
 			break;
 	}
 	return res;

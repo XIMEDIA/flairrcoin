@@ -20,7 +20,7 @@ TEST (system, generate_mass_activity)
 TEST (system, generate_mass_activity_long)
 {
 	rai::system system (24000, 1);
-	rai::thread_runner runner (system.service, system.nodes[0]->config.io_threads);
+	rai::thread_runner runner (system.nodes [0]->stats, system.service, system.nodes[0]->config.io_threads);
 	system.wallet (0)->insert_adhoc (rai::test_genesis_key.prv);
 	size_t count (1000000000);
 	system.generate_mass_activity (count, *system.nodes[0]);
@@ -39,7 +39,7 @@ TEST (system, receive_while_synchronizing)
 	std::vector<boost::thread> threads;
 	{
 		rai::system system (24000, 1);
-		rai::thread_runner runner (system.service, system.nodes[0]->config.io_threads);
+		rai::thread_runner runner (system.nodes [0]->stats, system.service, system.nodes[0]->config.io_threads);
 		system.wallet (0)->insert_adhoc (rai::test_genesis_key.prv);
 		size_t count (1000);
 		system.generate_mass_activity (count, *system.nodes[0]);
