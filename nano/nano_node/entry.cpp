@@ -343,19 +343,38 @@ int main (int argc, char * const * argv)
 			std::cerr << "Signature verifications " << std::chrono::duration_cast<std::chrono::microseconds> (end - begin).count () << std::endl;
 		}
 		else if (vm.count ("debug_verify_profile_batch"))
-		{
+		{/*
+			128 * 1024 count
+		  	Batch size	Time (us)	Mem size (b)
+			32			15523352	2176
+			64			14955576	4352
+			128			14056837	8704
+			256			13489080	17408 // Optimal
+			512			13711348	34816
+			1024		13663920	69632
+			2048		13419580	139264
+			4096		13713429	278528
+			8192		13337750	557056*/
 			nano::keypair key;
-			size_t batch_count (1000);
+			size_t total_count (128*1024);
+			size_t constexpr batch_count (8192);
 			nano::uint256_union message;
 			nano::uint512_union signature (nano::sign_message (key.prv, key.pub, message));
-			std::vector<unsigned char const *> messages (batch_count, message.bytes.data ());
-			std::vector<size_t> lengths (batch_count, sizeof (message));
-			std::vector<unsigned char const *> pub_keys (batch_count, key.pub.bytes.data ());
-			std::vector<unsigned char const *> signatures (batch_count, signature.bytes.data ());
-			std::vector<int> verifications;
-			verifications.resize (batch_count);
+			std::array<unsigned char const *, batch_count> messages;
+			std::array<size_t, batch_count> lengths;
+			std::array<unsigned char const *, batch_count> pub_keys;
+			std::array<unsigned char const *, batch_count> signatures;
+			std::array<int, batch_count> verifications;
+			std::cerr << "Starting verification\n";
 			auto begin (std::chrono::high_resolution_clock::now ());
-			nano::validate_message_batch (messages.data (), lengths.data (), pub_keys.data (), signatures.data (), batch_count, verifications.data ());
+			for (size_t i (0); i < total_count; i += batch_count)
+			{
+				std::fill (messages.begin (), messages.end (), message.bytes.data ());
+				std::fill (lengths.begin (), lengths.end (), sizeof (message));
+				std::fill (pub_keys.begin (), pub_keys.end (), key.pub.bytes.data ());
+				std::fill (signatures.begin (), signatures.end (), signature.bytes.data ());
+				nano::validate_message_batch (messages.data (), lengths.data (), pub_keys.data (), signatures.data (), batch_count, verifications.data ());
+			}
 			auto end (std::chrono::high_resolution_clock::now ());
 			std::cerr << "Batch signature verifications " << std::chrono::duration_cast<std::chrono::microseconds> (end - begin).count () << std::endl;
 		}
