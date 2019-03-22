@@ -729,7 +729,7 @@ void nano::transport::udp_channels::ongoing_syn_cookie_cleanup ()
 
 void nano::transport::udp_channels::ongoing_keepalive ()
 {
-	//node.keepalive_preconfigured (node.config.preconfigured_peers);
+	node.keepalive_preconfigured (node.config.preconfigured_peers);
 	nano::keepalive message;
 	random_fill (message.peers);
 	std::lock_guard<std::mutex> lock (mutex);
