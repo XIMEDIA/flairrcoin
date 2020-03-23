@@ -73,7 +73,7 @@ pub fn launch_node(
             "work_peers": "",
             "preconfigured_peers": "",
             "preconfigured_representatives": [
-                "xrb_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo"
+                "flr_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo"
             ],
             "inactive_supply": "0",
             "password_fanout": "1024",
@@ -97,7 +97,7 @@ pub fn launch_node(
         File::create(data_dir.join("config.json")).chain_err(|| "failed to create config.json")?;
     serde_json::to_writer_pretty(config_writer, &config)
         .chain_err(|| "failed to write config.json")?;
-    let child = Command::new(nano_node)
+    let child = Command::new(flairr_node)
         .arg("--data_path")
         .arg(&data_dir)
         .arg("--daemon")

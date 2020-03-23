@@ -195,7 +195,7 @@ public:
 	bool deserialize (nano::stream &);
 	nano::block_type block_type () const;
 	void block_type_set (nano::block_type);
-	static std::array<uint8_t, 2> constexpr magic_number = nano::is_test_network ? std::array<uint8_t, 2>{ { 'R', 'A' } } : nano::is_beta_network ? std::array<uint8_t, 2>{ { 'R', 'B' } } : std::array<uint8_t, 2>{ { 'R', 'C' } };
+	static std::array<uint8_t, 2> constexpr magic_number = nano::is_test_network ? std::array<uint8_t, 2>{ { 'F', 'A' } } : nano::is_beta_network ? std::array<uint8_t, 2>{ { 'F', 'B' } } : std::array<uint8_t, 2>{ { 'F', 'C' } };
 	uint8_t version_max;
 	uint8_t version_using;
 	uint8_t version_min;
@@ -211,7 +211,7 @@ public:
 	static std::bitset<16> constexpr block_type_mask = std::bitset<16> (0x0f00);
 	bool valid_magic () const
 	{
-		return magic_number[0] == 'R' && magic_number[1] >= 'A' && magic_number[1] <= 'C';
+		return magic_number[0] == 'F' && magic_number[1] >= 'A' && magic_number[1] <= 'C';
 	}
 	bool valid_network () const
 	{
