@@ -4533,7 +4533,7 @@ void nano::rpc_handler::process_request ()
 			}
 			else if (action == "nano_from_raw" || action == "raw_from_raw")
 			{
-				mFLR_from_raw (nano::xrb_ratio);
+				mFLR_from_raw (nano::FLR_ratio);
 			}
 			else if (action == "nano_to_raw" || action == "raw_to_raw")
 			{
