@@ -1595,7 +1595,7 @@ startup_time (std::chrono::steady_clock::now ())
 					{
 						break;
 					}
-					BOOST_LOG (log) << "Using bootstrap rep weight: " << account.to_account () << " -> " << weight.format_balance (mFLR_ratio, 0, true) << " XRB";
+					BOOST_LOG (log) << "Using bootstrap rep weight: " << account.to_account () << " -> " << weight.format_balance (mFLR_ratio, 0, true) << " FLR";
 					ledger.bootstrap_weights[account] = weight.number ();
 				}
 			}
