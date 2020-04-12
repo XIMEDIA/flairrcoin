@@ -666,8 +666,8 @@ TEST (node_config, v15_v16_upgrade)
 	};
 
 	// Check that upgrades work with both
-	test_upgrade ("livenet.flairrcoin.com", "peering.flairrcoin.com");
-	test_upgrade ("peers-beta.flairrcoin.com", "peering-beta.flairrcoin.com");
+	test_upgrade ("157.245.133.96", "157.245.133.96");
+	test_upgrade ("157.245.133.96", "157.245.133.96");
 }
 
 TEST (node_config, v16_values)
