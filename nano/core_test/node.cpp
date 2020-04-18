@@ -666,8 +666,8 @@ TEST (node_config, v15_v16_upgrade)
 	};
 
 	// Check that upgrades work with both
-	test_upgrade ("157.245.133.96", "157.245.133.96");
-	test_upgrade ("157.245.133.96", "157.245.133.96");
+	test_upgrade ("161.35.96.94", "161.35.96.94");
+	test_upgrade ("161.35.96.94", "161.35.96.94");
 }
 
 TEST (node_config, v16_values)
