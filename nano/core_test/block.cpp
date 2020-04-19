@@ -597,9 +597,9 @@ TEST (block_builder, open)
 	nano::block_builder builder;
 	auto block = builder
 	             .open ()
-	             .account_address ("flr_31y7yerd8546u9uye5xuu8u4sgpebm9s56zqrg98fsumg71k43b19hhtkg4z")
-	             .representative_address ("flr_31y7yerd8546u9uye5xuu8u4sgpebm9s56zqrg98fsumg71k43b19hhtkg4z")
-	             .source_hex ("83C5F330B30C44D9F7E60FBBD9B62CBACC4CCF9193F7C38E66E7737141210520")
+	             .account_address ("flr_1k7jdnjyjoj34fd6ptx975seifsm7zm6ypcecee89cfxdfycgx4wkbqhd5g8")
+	             .representative_address ("flr_1k7jdnjyjoj34fd6ptx975seifsm7zm6ypcecee89cfxdfycgx4wkbqhd5g8")
+	             .source_hex ("48B15D23E8D62113564B6BA728F2C837332FE64F594C531863A9BD5B7CA7745C")
 	             .build (ec);
 	ASSERT_EQ (block->hash ().to_string (), "991CF190094C00F0B68E2E5F75F6BEE95A2E0BD93CEAA4A6734DB9F19B728948");
 }
