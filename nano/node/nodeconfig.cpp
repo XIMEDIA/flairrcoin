@@ -8,8 +8,8 @@ namespace
 {
 const char * preconfigured_peers_key = "preconfigured_peers";
 const char * signature_checker_threads_key = "signature_checker_threads";
-const char * default_beta_peer_network = "161.35.96.94";
-const char * default_live_peer_network = "161.35.96.94";
+const char * default_beta_peer_network = "peering-beta.flairrcoin.com";
+const char * default_live_peer_network = "peering.flairrcoin.com";
 }
 
 nano::node_config::node_config () :
@@ -217,11 +217,11 @@ bool nano::node_config::upgrade_json (unsigned version_a, nano::jsonconfig & jso
 			auto peers_l (json.get_required_child (preconfigured_peers_key));
 			nano::jsonconfig peers;
 			peers_l.array_entries<std::string> ([&peers](std::string entry) {
-				if (entry == "peers-beta.flairrcoin.com")
+				if (entry == "peering-beta.flairrcoin.com")
 				{
 					entry = default_beta_peer_network;
 				}
-				else if (entry == "161.35.96.94")
+				else if (entry == "peering.flairrcoin.com")
 				{
 					entry = default_live_peer_network;
 				}

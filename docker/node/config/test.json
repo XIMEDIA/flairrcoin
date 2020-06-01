@@ -3,14 +3,14 @@
     "rpc_enable": "true",
     "rpc": {
         "address": "::ffff:0.0.0.0",
-        "port": "55000",
+        "port": "59000",
         "enable_control": "true",
         "frontier_request_limit": "16384",
         "chain_request_limit": "16384"
     },
     "node": {
         "version": "8",
-        "peering_port": "54000",
+        "peering_port": "58000",
         "bootstrap_fraction_numerator": "1",
         "receive_minimum": "1000000000000000000000000",
         "logging": {
@@ -35,7 +35,7 @@
         },
         "work_peers": "",
         "preconfigured_peers": [
-            "161.35.96.94"
+            "peering.flairrcoin.com"
         ],
         "preconfigured_representatives": [
             "flr_3arg3asgtigae3xckabaaewkx3bzsh7nwz7jkmjos79ihyaxwphhm6qgjps4",

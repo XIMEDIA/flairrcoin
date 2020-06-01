@@ -18,8 +18,8 @@ use errors::*;
 
 use rpc::RpcClient;
 
-const RPC_PORT_START: u64 = 55000;
-const PEERING_PORT_START: u64 = 54000;
+const RPC_PORT_START: u64 = 59000;
+const PEERING_PORT_START: u64 = 58000;
 
 pub fn launch_node(
     nano_node: &Path,
