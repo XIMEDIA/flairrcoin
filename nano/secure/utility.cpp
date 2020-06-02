@@ -33,7 +33,7 @@ boost::filesystem::path nano::working_path (bool legacy)
 		case nano::nano_networks::nano_live_network:
 			if (!legacy)
 			{
-				result /= "FlairrCoinData";
+				result /= "FlairrcoinData";
 			}
 			else
 			{
