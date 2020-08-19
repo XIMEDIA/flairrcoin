@@ -58,8 +58,8 @@ unchecked_cutoff_time (std::chrono::seconds (4 * 60 * 60)) // 4 hours
 			break;
 		case nano::nano_networks::nano_live_network:
 			preconfigured_peers.push_back (default_live_peer_network);
-			preconfigured_representatives.emplace_back ("DE497B0957D65A490C370467442AFDCE25DAA89550A4A35E607C518B11B92C63");
-			// preconfigured_representatives.emplace_back ("FD9BDB82D0908132F1B42CA51C76DEC8F18CA7FC80619B12B2ADE2A1FD664470");
+			preconfigured_representatives.emplace_back ("4781B239B690AF5C17479E910EE0B82C8DC1F5A3990AB61E7327CDB49EA2B642");
+			// preconfigured_representatives.emplace_back ("DE497B0957D65A490C370467442AFDCE25DAA89550A4A35E607C518B11B92C63");
 			
 			
 			break;
