@@ -666,8 +666,8 @@ TEST (node_config, v15_v16_upgrade)
 	};
 
 	// Check that upgrades work with both
-	test_upgrade ("peering.flairrcoin.com", "peering.flairrcoin.com");
-	test_upgrade ("beta.flairrcoin.com", "beta.flairrcoin.com");
+	test_upgrade ("95.111.224.209", "95.111.224.209");
+	test_upgrade ("95.111.224.209", "95.111.224.209");
 }
 
 TEST (node_config, v16_values)

@@ -8,8 +8,8 @@ namespace
 {
 const char * preconfigured_peers_key = "preconfigured_peers";
 const char * signature_checker_threads_key = "signature_checker_threads";
-const char * default_beta_peer_network = "beta.flairrcoin.com";
-const char * default_live_peer_network = "peering.flairrcoin.com";
+const char * default_beta_peer_network = "95.111.224.209";
+const char * default_live_peer_network = "95.111.224.209";
 }
 
 nano::node_config::node_config () :
@@ -58,8 +58,8 @@ unchecked_cutoff_time (std::chrono::seconds (4 * 60 * 60)) // 4 hours
 			break;
 		case nano::nano_networks::nano_live_network:
 			preconfigured_peers.push_back (default_live_peer_network);
-			preconfigured_representatives.emplace_back ("FA12D633B2A5E7B5AAC9F44534FB8E94F4FE9851FD73DB3A020DFBAAC2EA0089");
-			// preconfigured_representatives.emplace_back ("D20A3BF28B4DC2F104A7B166B0F8775FBC35795442FA7E8F7D10F0269A3EFB6F");
+			preconfigured_representatives.emplace_back ("917F938D73953C174E791B8E53E95D26E95E36D28A7DBBE7BD5A6AFC7E55D034");
+			// preconfigured_representatives.emplace_back ("FA12D633B2A5E7B5AAC9F44534FB8E94F4FE9851FD73DB3A020DFBAAC2EA0089");
 
 			
 			break;
@@ -221,7 +221,7 @@ bool nano::node_config::upgrade_json (unsigned version_a, nano::jsonconfig & jso
 				{
 					entry = default_beta_peer_network;
 				}
-				else if (entry == "peering.flairrcoin.com")
+				else if (entry == "95.111.224.209")
 				{
 					entry = default_live_peer_network;
 				}
