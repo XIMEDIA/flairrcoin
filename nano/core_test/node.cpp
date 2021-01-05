@@ -245,7 +245,8 @@ TEST (node, node_receive_quorum)
 	auto send = nano::send_block_builder ()
 	            .previous (previous)
 	            .destination (key.pub)
-	            .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	            .balance (nano::genesis_amount - nano::gFLR_ratio)
 	            .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	            .work (*system.work.generate (previous))
 	            .build_shared ();
@@ -493,13 +494,14 @@ TEST (node, working)
 TEST (node, price)
 {
 	nano::system system (1);
-	auto price1 (system.nodes[0]->price (nano::Gxrb_ratio, 1));
+	// gFLR_ratio changed from Gxrb_ratio
+	auto price1 (system.nodes[0]->price (nano::gFLR_ratio, 1));
 	ASSERT_EQ (nano::node::price_max * 100.0, price1);
-	auto price2 (system.nodes[0]->price (nano::Gxrb_ratio * int(nano::node::free_cutoff + 1), 1));
+	auto price2 (system.nodes[0]->price (nano::gFLR_ratio * int(nano::node::free_cutoff + 1), 1));
 	ASSERT_EQ (0, price2);
-	auto price3 (system.nodes[0]->price (nano::Gxrb_ratio * int(nano::node::free_cutoff + 2) / 2, 1));
+	auto price3 (system.nodes[0]->price (nano::gFLR_ratio * int(nano::node::free_cutoff + 2) / 2, 1));
 	ASSERT_EQ (nano::node::price_max * 100.0 / 2, price3);
-	auto price4 (system.nodes[0]->price (nano::Gxrb_ratio * int(nano::node::free_cutoff) * 2, 1));
+	auto price4 (system.nodes[0]->price (nano::gFLR_ratio * int(nano::node::free_cutoff) * 2, 1));
 	ASSERT_EQ (0, price4);
 }
 
@@ -1334,7 +1336,8 @@ TEST (node, fork_bootstrap_flip)
 	auto send1 = builder.make_block ()
 	             .previous (latest)
 	             .destination (key1.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*system0.work.generate (latest))
 	             .build_shared ();
@@ -1342,7 +1345,8 @@ TEST (node, fork_bootstrap_flip)
 	auto send2 = builder.make_block ()
 	             .previous (latest)
 	             .destination (key2.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*system0.work.generate (latest))
 	             .build_shared ();
@@ -1657,7 +1661,8 @@ TEST (node, DISABLED_fork_stale)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Mxrb_ratio)
+				// mFLR_ratio changed from Mxrb_ratio
+	             .balance (nano::genesis_amount - nano::mFLR_ratio)
 	             .link (key1.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (0)
@@ -1674,7 +1679,8 @@ TEST (node, DISABLED_fork_stale)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send3->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Mxrb_ratio)
+				// mFLR_ratio changed from Mxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::mFLR_ratio)
 	             .link (key1.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (0)
@@ -1684,7 +1690,8 @@ TEST (node, DISABLED_fork_stale)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send3->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Mxrb_ratio)
+				// mFLR_ratio changed from Mxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::mFLR_ratio)
 	             .link (key2.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (0)
@@ -1739,7 +1746,8 @@ TEST (node, broadcast_elected)
 			auto fund_big = *builder.send ()
 			                 .previous (nano::genesis_hash)
 			                 .destination (rep_big.pub)
-			                 .balance (nano::Gxrb_ratio * 5)
+							// gFLR_ratio changed from Gxrb_ratio
+			                 .balance (nano::gFLR_ratio * 5)
 			                 .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 			                 .work (*system.work.generate (nano::genesis_hash))
 			                 .build ();
@@ -1753,7 +1761,8 @@ TEST (node, broadcast_elected)
 			auto fund_small = *builder.send ()
 			                   .previous (fund_big.hash ())
 			                   .destination (rep_small.pub)
-			                   .balance (nano::Gxrb_ratio * 2)
+								// gFLR_ratio changed from Gxrb_ratio
+			                   .balance (nano::gFLR_ratio * 2)
 			                   .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 			                   .work (*system.work.generate (fund_big.hash ()))
 			                   .build ();
@@ -1767,7 +1776,8 @@ TEST (node, broadcast_elected)
 			auto fund_other = *builder.send ()
 			                   .previous (fund_small.hash ())
 			                   .destination (rep_other.pub)
-			                   .balance (nano::Gxrb_ratio)
+								// gFLR_ratio changed from Gxrb_ratio
+			                   .balance (nano::gFLR_ratio)
 			                   .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 			                   .work (*system.work.generate (fund_small.hash ()))
 			                   .build ();
@@ -2091,15 +2101,16 @@ TEST (node, DISABLED_unconfirmed_send)
 	nano::keypair key0;
 	wallet1->insert_adhoc (key0.prv);
 	wallet0->insert_adhoc (nano::dev_genesis_key.prv);
-	auto send1 (wallet0->send_action (nano::genesis_account, key0.pub, 2 * nano::Mxrb_ratio));
-	ASSERT_TIMELY (10s, node1.balance (key0.pub) == 2 * nano::Mxrb_ratio && !node1.bootstrap_initiator.in_progress ());
+	// mFLR_ratio changed from Mxrb_ratio
+	auto send1 (wallet0->send_action (nano::genesis_account, key0.pub, 2 * nano::mFLR_ratio));
+	ASSERT_TIMELY (10s, node1.balance (key0.pub) == 2 * nano::mFLR_ratio && !node1.bootstrap_initiator.in_progress ());
 	auto latest (node1.latest (key0.pub));
-	nano::state_block send2 (key0.pub, latest, nano::genesis_account, nano::Mxrb_ratio, nano::genesis_account, key0.prv, key0.pub, *node0.work_generate_blocking (latest));
+	nano::state_block send2 (key0.pub, latest, nano::genesis_account, nano::mFLR_ratio, nano::genesis_account, key0.prv, key0.pub, *node0.work_generate_blocking (latest));
 	{
 		auto transaction (node1.store.tx_begin_write ());
 		ASSERT_EQ (nano::process_result::progress, node1.ledger.process (transaction, send2).code);
 	}
-	auto send3 (wallet1->send_action (key0.pub, nano::genesis_account, nano::Mxrb_ratio));
+	auto send3 (wallet1->send_action (key0.pub, nano::genesis_account, nano::mFLR_ratio));
 	ASSERT_TIMELY (10s, node0.balance (nano::genesis_account) == nano::genesis_amount);
 }
 
@@ -2114,7 +2125,8 @@ TEST (node, rep_list)
 	wallet0->insert_adhoc (nano::dev_genesis_key.prv);
 	nano::keypair key1;
 	// Broadcast a confirm so others should know this is a rep node
-	wallet0->send_action (nano::dev_genesis_key.pub, key1.pub, nano::Mxrb_ratio);
+	// mFLR_ratio changed from Mxrb_ratio
+	wallet0->send_action (nano::dev_genesis_key.pub, key1.pub, nano::mFLR_ratio);
 	ASSERT_EQ (0, node1.rep_crawler.representatives (1).size ());
 	system.deadline_set (10s);
 	auto done (false);
@@ -2351,7 +2363,8 @@ TEST (node, no_voting)
 	nano::keypair key1;
 	wallet1->insert_adhoc (key1.prv);
 	// Broadcast a confirm so others should know this is a rep node
-	wallet1->send_action (nano::dev_genesis_key.pub, key1.pub, nano::Mxrb_ratio);
+	// mFLR_ratio changed from Mxrb_ratio
+	wallet1->send_action (nano::dev_genesis_key.pub, key1.pub, nano::mFLR_ratio);
 	ASSERT_TIMELY (10s, node0.active.empty ());
 	ASSERT_EQ (0, node0.stats.count (nano::stat::type::message, nano::stat::detail::confirm_ack, nano::stat::dir::in));
 }
@@ -2518,7 +2531,8 @@ TEST (node, block_confirm)
 		             .account (nano::dev_genesis_key.pub)
 		             .previous (genesis.hash ())
 		             .representative (nano::dev_genesis_key.pub)
-		             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+					// gFLR_ratio changed from Gxrb_ratio
+		             .balance (nano::genesis_amount - nano::gFLR_ratio)
 		             .link (key.pub)
 		             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 		             .work (*node1.work_generate_blocking (genesis.hash ()))
@@ -2542,7 +2556,8 @@ TEST (node, block_confirm)
 		}
 		ASSERT_TIMELY (3s, node2.block_confirmed (send1_copy->hash ()) && node2.active.empty ());
 		system.wallet (1)->insert_adhoc (nano::dev_genesis_key.prv);
-		auto send2 (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, send1->hash (), nano::dev_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio * 2, key.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, *node1.work_generate_blocking (send1->hash ())));
+		// gFLR_ratio changed from Gxrb_ratio
+		auto send2 (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, send1->hash (), nano::dev_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio * 2, key.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, *node1.work_generate_blocking (send1->hash ())));
 		{
 			auto transaction (node1.store.tx_begin_write ());
 			ASSERT_EQ (nano::process_result::progress, node1.ledger.process (transaction, *send2).code);
@@ -2611,7 +2626,8 @@ TEST (node, confirm_quorum)
 	nano::genesis genesis;
 	system.wallet (0)->insert_adhoc (nano::dev_genesis_key.prv);
 	// Put greater than online_weight_minimum in pending so quorum can't be reached
-	nano::amount new_balance (node1.config.online_weight_minimum.number () - nano::Gxrb_ratio);
+	// gFLR_ratio changed from Gxrb_ratio
+	nano::amount new_balance (node1.config.online_weight_minimum.number () - nano::gFLR_ratio);
 	auto send1 = nano::state_block_builder ()
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
@@ -2645,7 +2661,8 @@ TEST (node, local_votes_cache)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (genesis.hash ()))
@@ -2654,7 +2671,8 @@ TEST (node, local_votes_cache)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send1->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (send1->hash ()))
@@ -2663,7 +2681,8 @@ TEST (node, local_votes_cache)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send2->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 3 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 3 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (send2->hash ()))
@@ -2751,7 +2770,8 @@ TEST (node, local_votes_cache_batch)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (genesis.hash ()))
@@ -2816,7 +2836,8 @@ TEST (node, local_votes_cache_generate_new_vote)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (genesis.hash ()))
@@ -3149,7 +3170,8 @@ TEST (node, fork_election_invalid_block_signature)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .work (*system.work.generate (genesis.hash ()))
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
@@ -3158,7 +3180,8 @@ TEST (node, fork_election_invalid_block_signature)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .work (*system.work.generate (genesis.hash ()))
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
@@ -3167,7 +3190,8 @@ TEST (node, fork_election_invalid_block_signature)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .work (*system.work.generate (genesis.hash ()))
 	             .sign (nano::dev_genesis_key.prv, 0) // Invalid signature
@@ -3215,7 +3239,8 @@ TEST (node, block_processor_signatures)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (latest)
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (key1.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node1.work_generate_blocking (latest))
@@ -3224,7 +3249,8 @@ TEST (node, block_processor_signatures)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send1->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::gFLR_ratio)
 	             .link (key2.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node1.work_generate_blocking (send1->hash ()))
@@ -3233,7 +3259,8 @@ TEST (node, block_processor_signatures)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send2->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 3 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 3 * nano::gFLR_ratio)
 	             .link (key3.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node1.work_generate_blocking (send2->hash ()))
@@ -3243,7 +3270,8 @@ TEST (node, block_processor_signatures)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send3->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 4 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 4 * nano::gFLR_ratio)
 	             .link (key3.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node1.work_generate_blocking (send3->hash ()))
@@ -3254,7 +3282,8 @@ TEST (node, block_processor_signatures)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send3->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 5 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 5 * nano::gFLR_ratio)
 	             .link (key3.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node1.work_generate_blocking (send3->hash ()))
@@ -3269,7 +3298,8 @@ TEST (node, block_processor_signatures)
 	                .account (key1.pub)
 	                .previous (0)
 	                .representative (nano::dev_genesis_key.pub)
-	                .balance (nano::Gxrb_ratio)
+					// gFLR_ratio changed from Gxrb_ratio
+	                .balance (nano::gFLR_ratio)
 	                .link (send1->hash ())
 	                .sign (key1.prv, key1.pub)
 	                .work (*node1.work_generate_blocking (key1.pub))
@@ -3278,7 +3308,8 @@ TEST (node, block_processor_signatures)
 	                .account (key2.pub)
 	                .previous (0)
 	                .representative (nano::dev_genesis_key.pub)
-	                .balance (nano::Gxrb_ratio)
+					// gFLR_ratio changed from Gxrb_ratio
+	                .balance (nano::gFLR_ratio)
 	                .link (send2->hash ())
 	                .sign (key2.prv, key2.pub)
 	                .work (*node1.work_generate_blocking (key2.pub))
@@ -3288,7 +3319,8 @@ TEST (node, block_processor_signatures)
 	                .account (key3.pub)
 	                .previous (0)
 	                .representative (nano::dev_genesis_key.pub)
-	                .balance (nano::Gxrb_ratio)
+					// gFLR_ratio changed from Gxrb_ratio
+	                .balance (nano::gFLR_ratio)
 	                .link (send3->hash ())
 	                .sign (key2.prv, key3.pub)
 	                .work (*node1.work_generate_blocking (key3.pub))
@@ -3328,7 +3360,8 @@ TEST (node, block_processor_reject_state)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (genesis.hash ()))
@@ -3343,7 +3376,8 @@ TEST (node, block_processor_reject_state)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (genesis.hash ()))
@@ -3366,7 +3400,8 @@ TEST (node, block_processor_full)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (genesis.hash ()))
@@ -3375,7 +3410,8 @@ TEST (node, block_processor_full)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send1->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (send1->hash ()))
@@ -3384,7 +3420,8 @@ TEST (node, block_processor_full)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send2->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 3 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 3 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (send2->hash ()))
@@ -3412,7 +3449,8 @@ TEST (node, block_processor_half_full)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (genesis.hash ()))
@@ -3421,7 +3459,8 @@ TEST (node, block_processor_half_full)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send1->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (send1->hash ()))
@@ -3430,7 +3469,8 @@ TEST (node, block_processor_half_full)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send2->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 3 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 3 * nano::gFLR_ratio)
 	             .link (nano::dev_genesis_key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node.work_generate_blocking (send2->hash ()))
@@ -3706,7 +3746,8 @@ TEST (node, bidirectional_tcp)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (genesis.hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - nano::gFLR_ratio)
 	             .link (key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node1->work_generate_blocking (genesis.hash ()))
@@ -3740,7 +3781,8 @@ TEST (node, bidirectional_tcp)
 	             .account (nano::dev_genesis_key.pub)
 	             .previous (send1->hash ())
 	             .representative (nano::dev_genesis_key.pub)
-	             .balance (nano::genesis_amount - 2 * nano::Gxrb_ratio)
+				// gFLR_ratio changed from Gxrb_ratio
+	             .balance (nano::genesis_amount - 2 * nano::gFLR_ratio)
 	             .link (key.pub)
 	             .sign (nano::dev_genesis_key.prv, nano::dev_genesis_key.pub)
 	             .work (*node1->work_generate_blocking (send1->hash ()))
