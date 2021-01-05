@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory>
 #include <nano/lib/blocks.hpp>
-#include <nano/lib/errors.hpp>
+
+#include <memory>
 
 namespace nano
 {
@@ -45,63 +45,25 @@ class abstract_builder
 {
 public:
 	/** Returns the built block as a unique_ptr */
-	inline std::unique_ptr<BLOCKTYPE> build ()
-	{
-		if (!ec)
-		{
-			static_cast<BUILDER *> (this)->validate ();
-		}
-		assert (!ec);
-		return std::move (block);
-	}
-
+	std::unique_ptr<BLOCKTYPE> build ();
 	/** Returns the built block as a unique_ptr. Any errors are placed in \p ec */
-	inline std::unique_ptr<BLOCKTYPE> build (std::error_code & ec)
-	{
-		if (!this->ec)
-		{
-			static_cast<BUILDER *> (this)->validate ();
-		}
-		ec = this->ec;
-		return std::move (block);
-	}
-
+	std::unique_ptr<BLOCKTYPE> build (std::error_code & ec);
+	/** Returns the built block as a shared_ptr */
+	std::shared_ptr<BLOCKTYPE> build_shared ();
+	/** Returns the built block as a shared_ptr. Any errors are placed in \p ec */
+	std::shared_ptr<BLOCKTYPE> build_shared (std::error_code & ec);
 	/** Set work value */
-	inline abstract_builder & work (uint64_t work)
-	{
-		block->work = work;
-		build_state |= build_flags::work_present;
-		return *this;
-	}
-
+	abstract_builder & work (uint64_t work);
 	/** Sign the block using the \p private_key and \p public_key */
-	inline abstract_builder & sign (nano::raw_key const & private_key, nano::public_key const & public_key)
-	{
-		block->signature = nano::sign_message (private_key, public_key, block->hash ());
-		build_state |= build_flags::signature_present;
-		return *this;
-	}
-
+	abstract_builder & sign (nano::raw_key const & private_key, nano::public_key const & public_key);
 	/** Set signature to zero to pass build() validation, allowing block to be signed at a later point. This is mostly useful for tests. */
-	inline abstract_builder & sign_zero ()
-	{
-		block->signature.clear ();
-		build_state |= build_flags::signature_present;
-		return *this;
-	}
+	abstract_builder & sign_zero ();
 
 protected:
-	abstract_builder ()
-	{
-	}
+	abstract_builder () = default;
 
 	/** Create a new block and resets the internal builder state */
-	inline void construct_block ()
-	{
-		block = std::make_unique<BLOCKTYPE> ();
-		ec.clear ();
-		build_state = 0;
-	}
+	void construct_block ();
 
 	/** The block we're building. Clients can convert this to shared_ptr as needed. */
 	std::unique_ptr<BLOCKTYPE> block;
@@ -125,38 +87,40 @@ class state_block_builder : public abstract_builder<nano::state_block, state_blo
 public:
 	/** Creates a state block builder by calling make_block() */
 	state_block_builder ();
+	/** Initialize from an existing block */
+	state_block_builder & from (nano::state_block const & block);
 	/** Creates a new block with fields, signature and work set to sentinel values. All fields must be set or zeroed for build() to succeed. */
 	state_block_builder & make_block ();
 	/** Sets all hashables, signature and work to zero. */
 	state_block_builder & zero ();
 	/** Set account */
-	state_block_builder & account (nano::account account);
+	state_block_builder & account (nano::account const & account);
 	/** Set account from hex representation of public key */
-	state_block_builder & account_hex (std::string account_hex);
+	state_block_builder & account_hex (std::string const & account_hex);
 	/** Set account from an xrb_ or nano_ address */
-	state_block_builder & account_address (std::string account_address);
+	state_block_builder & account_address (std::string const & account_address);
 	/** Set representative */
-	state_block_builder & representative (nano::account account);
+	state_block_builder & representative (nano::account const & account);
 	/** Set representative from hex representation of public key */
-	state_block_builder & representative_hex (std::string account_hex);
+	state_block_builder & representative_hex (std::string const & account_hex);
 	/** Set representative from an xrb_ or nano_ address */
-	state_block_builder & representative_address (std::string account_address);
+	state_block_builder & representative_address (std::string const & account_address);
 	/** Set previous block hash */
-	state_block_builder & previous (nano::block_hash previous);
+	state_block_builder & previous (nano::block_hash const & previous);
 	/** Set previous block hash from hex representation */
-	state_block_builder & previous_hex (std::string previous_hex);
+	state_block_builder & previous_hex (std::string const & previous_hex);
 	/** Set balance */
-	state_block_builder & balance (nano::amount balance);
+	state_block_builder & balance (nano::amount const & balance);
 	/** Set balance from decimal string */
-	state_block_builder & balance_dec (std::string balance_decimal);
+	state_block_builder & balance_dec (std::string const & balance_decimal);
 	/** Set balance from hex string */
-	state_block_builder & balance_hex (std::string balance_hex);
+	state_block_builder & balance_hex (std::string const & balance_hex);
 	/** Set link */
-	state_block_builder & link (nano::uint256_union link);
+	state_block_builder & link (nano::link const & link);
 	/** Set link from hex representation */
-	state_block_builder & link_hex (std::string link_hex);
+	state_block_builder & link_hex (std::string const & link_hex);
 	/** Set link from an xrb_ or nano_ address */
-	state_block_builder & link_address (std::string link_address);
+	state_block_builder & link_address (std::string const & link_address);
 	/** Provides validation for build() */
 	void validate ();
 
@@ -287,35 +251,35 @@ class block_builder
 {
 public:
 	/** Prepares a new state block and returns a block builder */
-	inline nano::state_block_builder & state ()
+	nano::state_block_builder & state ()
 	{
 		state_builder.make_block ();
 		return state_builder;
 	}
 
 	/** Prepares a new open block and returns a block builder */
-	inline nano::open_block_builder & open ()
+	nano::open_block_builder & open ()
 	{
 		open_builder.make_block ();
 		return open_builder;
 	}
 
 	/** Prepares a new change block and returns a block builder */
-	inline nano::change_block_builder & change ()
+	nano::change_block_builder & change ()
 	{
 		change_builder.make_block ();
 		return change_builder;
 	}
 
 	/** Prepares a new send block and returns a block builder */
-	inline nano::send_block_builder & send ()
+	nano::send_block_builder & send ()
 	{
 		send_builder.make_block ();
 		return send_builder;
 	}
 
 	/** Prepares a new receive block and returns a block builder */
-	inline nano::receive_block_builder & receive ()
+	nano::receive_block_builder & receive ()
 	{
 		receive_builder.make_block ();
 		return receive_builder;

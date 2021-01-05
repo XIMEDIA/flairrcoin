@@ -1,148 +1,142 @@
-#include <iostream>
 #include <nano/lib/utility.hpp>
 
-namespace nano
-{
-seq_con_info_composite::seq_con_info_composite (const std::string & name) :
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <boost/filesystem.hpp>
+
+#include <iostream>
+#include <sstream>
+#include <thread>
+
+// Some builds (mac) fail due to "Boost.Stacktrace requires `_Unwind_Backtrace` function".
+#ifndef _WIN32
+#ifdef NANO_STACKTRACE_BACKTRACE
+#define BOOST_STACKTRACE_USE_BACKTRACE
+#endif
+#ifndef _GNU_SOURCE
+#define BEFORE_GNU_SOURCE 0
+#define _GNU_SOURCE
+#else
+#define BEFORE_GNU_SOURCE 1
+#endif
+#endif
+// On Windows this include defines min/max macros, so keep below other includes
+// to reduce conflicts with other std functions
+#include <boost/stacktrace.hpp>
+#ifndef _WIN32
+#if !BEFORE_GNU_SOURCE
+#undef _GNU_SOURCE
+#endif
+#endif
+
+nano::container_info_composite::container_info_composite (const std::string & name) :
 name (name)
 {
 }
 
-bool seq_con_info_composite::is_composite () const
+bool nano::container_info_composite::is_composite () const
 {
 	return true;
 }
 
-void seq_con_info_composite::add_component (std::unique_ptr<seq_con_info_component> child)
+void nano::container_info_composite::add_component (std::unique_ptr<container_info_component> child)
 {
 	children.push_back (std::move (child));
 }
 
-const std::vector<std::unique_ptr<seq_con_info_component>> & seq_con_info_composite::get_children () const
+const std::vector<std::unique_ptr<nano::container_info_component>> & nano::container_info_composite::get_children () const
 {
 	return children;
 }
 
-const std::string & seq_con_info_composite::get_name () const
+const std::string & nano::container_info_composite::get_name () const
 {
 	return name;
 }
 
-seq_con_info_leaf::seq_con_info_leaf (const seq_con_info & info) :
+nano::container_info_leaf::container_info_leaf (const container_info & info) :
 info (info)
 {
 }
-bool seq_con_info_leaf::is_composite () const
+
+bool nano::container_info_leaf::is_composite () const
 {
 	return false;
 }
-const seq_con_info & seq_con_info_leaf::get_info () const
+
+const nano::container_info & nano::container_info_leaf::get_info () const
 {
 	return info;
 }
 
-namespace thread_role
+void nano::dump_crash_stacktrace ()
 {
-	/*
-	 * nano::thread_role namespace
-	 *
-	 * Manage thread role
-	 */
-	static thread_local nano::thread_role::name current_thread_role = nano::thread_role::name::unknown;
-	nano::thread_role::name get ()
-	{
-		return current_thread_role;
-	}
+	boost::stacktrace::safe_dump_to ("nano_node_backtrace.dump");
+}
 
-	static std::string get_string (nano::thread_role::name role)
-	{
-		std::string thread_role_name_string;
+std::string nano::generate_stacktrace ()
+{
+	auto stacktrace = boost::stacktrace::stacktrace ();
+	std::stringstream ss;
+	ss << stacktrace;
+	return ss.str ();
+}
 
-		switch (role)
+void nano::remove_all_files_in_dir (boost::filesystem::path const & dir)
+{
+	for (auto & p : boost::filesystem::directory_iterator (dir))
+	{
+		auto path = p.path ();
+		if (boost::filesystem::is_regular_file (path))
 		{
-			case nano::thread_role::name::unknown:
-				thread_role_name_string = "<unknown>";
-				break;
-			case nano::thread_role::name::io:
-				thread_role_name_string = "I/O";
-				break;
-			case nano::thread_role::name::work:
-				thread_role_name_string = "Work pool";
-				break;
-			case nano::thread_role::name::packet_processing:
-				thread_role_name_string = "Pkt processing";
-				break;
-			case nano::thread_role::name::alarm:
-				thread_role_name_string = "Alarm";
-				break;
-			case nano::thread_role::name::vote_processing:
-				thread_role_name_string = "Vote processing";
-				break;
-			case nano::thread_role::name::block_processing:
-				thread_role_name_string = "Blck processing";
-				break;
-			case nano::thread_role::name::request_loop:
-				thread_role_name_string = "Request loop";
-				break;
-			case nano::thread_role::name::wallet_actions:
-				thread_role_name_string = "Wallet actions";
-				break;
-			case nano::thread_role::name::bootstrap_initiator:
-				thread_role_name_string = "Bootstrap init";
-				break;
-			case nano::thread_role::name::voting:
-				thread_role_name_string = "Voting";
-				break;
-			case nano::thread_role::name::signature_checking:
-				thread_role_name_string = "Signature check";
-				break;
-			case nano::thread_role::name::slow_db_upgrade:
-				thread_role_name_string = "Slow db upgrade";
-				break;
+			boost::filesystem::remove (path);
 		}
-
-		/*
-		 * We want to constrain the thread names to 15
-		 * characters, since this is the smallest maximum
-		 * length supported by the platforms we support
-		 * (specifically, Linux)
-		 */
-		assert (thread_role_name_string.size () < 16);
-		return (thread_role_name_string);
-	}
-
-	std::string get_string ()
-	{
-		return get_string (current_thread_role);
-	}
-
-	void set (nano::thread_role::name role)
-	{
-		auto thread_role_name_string (get_string (role));
-
-		nano::thread_role::set_os_name (thread_role_name_string);
-
-		nano::thread_role::current_thread_role = role;
 	}
 }
-}
 
-void nano::thread_attributes::set (boost::thread::attributes & attrs)
+void nano::move_all_files_to_dir (boost::filesystem::path const & from, boost::filesystem::path const & to)
 {
-	auto attrs_l (&attrs);
-	attrs_l->set_stack_size (8000000); //8MB
+	for (auto & p : boost::filesystem::directory_iterator (from))
+	{
+		auto path = p.path ();
+		if (boost::filesystem::is_regular_file (path))
+		{
+			boost::filesystem::rename (path, to / path.filename ());
+		}
+	}
 }
 
 /*
- * Backing code for "release_assert", which is itself a macro
+ * Backing code for "release_assert" & "debug_assert", which are macros
  */
-void release_assert_internal (bool check, const char * check_expr, const char * file, unsigned int line)
+void assert_internal (const char * check_expr, const char * func, const char * file, unsigned int line, bool is_release_assert)
 {
-	if (check)
-	{
-		return;
-	}
+	std::cerr << "Assertion (" << check_expr << ") failed\n"
+	          << func << "\n"
+	          << file << ":" << line << "\n\n";
 
-	std::cerr << "Assertion (" << check_expr << ") failed " << file << ":" << line << std::endl;
+	// Output stack trace to cerr
+	auto backtrace_str = nano::generate_stacktrace ();
+	std::cerr << backtrace_str << std::endl;
+
+	// "abort" at the end of this function will go into any signal handlers (the daemon ones will generate a stack trace and load memory address files on non-Windows systems).
+	// As there is no async-signal-safe way to generate stacktraces on Windows it must be done before aborting
+#ifdef _WIN32
+	{
+		// Try construct the stacktrace dump in the same folder as the the running executable, otherwise use the current directory.
+		boost::system::error_code err;
+		auto running_executable_filepath = boost::dll::program_location (err);
+		std::string filename = is_release_assert ? "nano_node_backtrace_release_assert.txt" : "nano_node_backtrace_assert.txt";
+		std::string filepath = filename;
+		if (!err)
+		{
+			filepath = (running_executable_filepath.parent_path () / filename).string ();
+		}
+
+		std::ofstream file (filepath);
+		nano::set_secure_perm_file (filepath);
+		file << backtrace_str;
+	}
+#endif
+
 	abort ();
 }

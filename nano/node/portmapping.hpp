@@ -1,9 +1,8 @@
 #pragma once
 
-#include <boost/asio/ip/address_v4.hpp>
-#include <miniupnpc.h>
+#include <miniupnp/miniupnpc/miniupnpc.h>
+
 #include <mutex>
-#include <nano/lib/config.hpp>
 
 namespace nano
 {
@@ -15,9 +14,25 @@ class mapping_protocol
 public:
 	/** Protocol name; TPC or UDP */
 	char const * name;
-	int remaining;
 	boost::asio::ip::address_v4 external_address;
 	uint16_t external_port;
+	bool enabled;
+};
+
+/** Collection of discovered UPnP devices and state*/
+class upnp_state
+{
+public:
+	upnp_state () = default;
+	~upnp_state ();
+	upnp_state & operator= (upnp_state &&);
+
+	/** List of discovered UPnP devices */
+	UPNPDev * devices{ nullptr };
+	/** UPnP collected url information */
+	UPNPUrls urls{ 0 };
+	/** UPnP state */
+	IGDdatas data{ { 0 } };
 };
 
 /** UPnP port mapping */
@@ -28,27 +43,23 @@ public:
 	void start ();
 	void stop ();
 	void refresh_devices ();
+	nano::endpoint external_address ();
 
 private:
 	/** Add port mappings for the node port (not RPC). Refresh when the lease ends. */
 	void refresh_mapping ();
-	/** Refresh occasionally in case router loses mapping */
+	/** Check occasionally to refresh in case router loses mapping */
 	void check_mapping_loop ();
-	int check_mapping ();
-	std::mutex mutex;
+	/** Returns false if mapping still exists */
+	bool check_mapping ();
+	std::string get_config_port (std::string const &);
+	upnp_state upnp;
 	nano::node & node;
-	/** List of all UPnP devices */
-	UPNPDev * devices;
-	/** UPnP collected url information */
-	UPNPUrls urls;
-	/** UPnP state */
-	IGDdatas data;
-	/** Timeouts are primes so they infrequently happen at the same time */
-	static int constexpr mapping_timeout = nano::is_test_network ? 53 : 3593;
-	static int constexpr check_timeout = nano::is_test_network ? 17 : 53;
+	nano::network_params network_params;
 	boost::asio::ip::address_v4 address;
 	std::array<mapping_protocol, 2> protocols;
-	uint64_t check_count;
-	bool on;
+	uint64_t check_count{ 0 };
+	std::atomic<bool> on{ false };
+	std::mutex mutex;
 };
 }

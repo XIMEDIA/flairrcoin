@@ -1,11 +1,11 @@
 #pragma once
 
+#include <nano/boost/asio/thread_pool.hpp>
+#include <nano/lib/utility.hpp>
+
 #include <atomic>
 #include <future>
 #include <mutex>
-#include <nano/lib/utility.hpp>
-
-#include <boost/asio.hpp>
 
 namespace nano
 {
@@ -35,10 +35,12 @@ public:
 	void stop ();
 	void flush ();
 
+	static size_t constexpr batch_size = 256;
+
 private:
 	struct Task final
 	{
-		Task (nano::signature_check_set & check, int pending) :
+		Task (nano::signature_check_set & check, size_t pending) :
 		check (check), pending (pending)
 		{
 		}
@@ -47,7 +49,7 @@ private:
 			release_assert (pending == 0);
 		}
 		nano::signature_check_set & check;
-		std::atomic<int> pending;
+		std::atomic<size_t> pending;
 	};
 
 	bool verify_batch (const nano::signature_check_set & check_a, size_t index, size_t size);
@@ -55,12 +57,8 @@ private:
 	void set_thread_names (unsigned num_threads);
 	boost::asio::thread_pool thread_pool;
 	std::atomic<int> tasks_remaining{ 0 };
-	/** minimum signature_check_set size eligible to be multithreaded */
-	static constexpr size_t multithreaded_cutoff = 513;
-	static constexpr size_t batch_size = 256;
 	const bool single_threaded;
 	unsigned num_threads;
-	std::mutex mutex;
-	bool stopped{ false };
+	std::atomic<bool> stopped{ false };
 };
 }

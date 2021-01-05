@@ -1,32 +1,53 @@
 add_executable (core_test
-	testutil.hpp
+	core_test_main.cc
+	fakes/websocket_client.hpp
+	fakes/work_peer.hpp
+	active_transactions.cpp
 	block.cpp
 	block_store.cpp
-	interface.cpp
-	ipc.cpp
+	bootstrap.cpp
+	cli.cpp
+	confirmation_height.cpp
+	confirmation_solicitor.cpp
 	conflicts.cpp
-	daemon.cpp
-	entry.cpp
+	difficulty.cpp
+	distributed_work.cpp
+	election.cpp
+	epochs.cpp
+	frontiers_confirmation.cpp
 	gap_cache.cpp
+	ipc.cpp
 	ledger.cpp
-	network.cpp
-	node.cpp
+	locks.cpp
+	logger.cpp
 	message.cpp
 	message_parser.cpp
+	memory_pool.cpp
+	network.cpp
+	network_filter.cpp
+	node.cpp
 	processor_service.cpp
 	peer_container.cpp
-	rpc.cpp
+	request_aggregator.cpp
 	signing.cpp
+	socket.cpp
+	telemetry.cpp
+	toml.cpp
 	timer.cpp
 	uint256_union.cpp
-	versioning.cpp
+	utility.cpp
+	vote_processor.cpp
+	voting.cpp
 	wallet.cpp
 	wallets.cpp
+	websocket.cpp
 	work_pool.cpp)
 
 target_compile_definitions(core_test
 		PRIVATE
-			-DNANO_VERSION_MAJOR=${CPACK_PACKAGE_VERSION_MAJOR}
-			-DNANO_VERSION_MINOR=${CPACK_PACKAGE_VERSION_MINOR}
-			-DNANO_VERSION_PATCH=${CPACK_PACKAGE_VERSION_PATCH})
-target_link_libraries (core_test node secure gtest_main gtest libminiupnpc-static Boost::boost)
+			-DTAG_VERSION_STRING=${TAG_VERSION_STRING}
+			-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}
+			-DBOOST_PROCESS_SUPPORTED=${BOOST_PROCESS_SUPPORTED}
+			-DCI=${CI_TEST})
+
+target_link_libraries (core_test node secure test_common gtest libminiupnpc-static Boost::log_setup Boost::log Boost::boost)

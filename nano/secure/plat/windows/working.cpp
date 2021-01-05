@@ -1,4 +1,6 @@
-#include <nano/node/working.hpp>
+#include <nano/secure/working.hpp>
+
+#include <boost/filesystem/path.hpp>
 
 #include <shlobj.h>
 
@@ -14,7 +16,7 @@ boost::filesystem::path app_path ()
 	}
 	else
 	{
-		assert (false);
+		debug_assert (false);
 	}
 	return result;
 }

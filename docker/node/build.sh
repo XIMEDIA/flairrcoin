@@ -3,7 +3,7 @@
 network='live'
 
 print_usage() {
-	echo 'build.sh [-h] [-n {live|beta|test}]'
+	echo 'build.sh [-h] [-n {live|beta|dev}]'
 }
 
 while getopts 'hn:' OPT; do
@@ -26,7 +26,7 @@ case "${network}" in
 	live)
 		network_tag=''
 		;;
-	test|beta)
+	dev|beta)
 		network_tag="-${network}"
 		;;
 	*)
@@ -38,5 +38,5 @@ esac
 REPO_ROOT=`git rev-parse --show-toplevel`
 COMMIT_SHA=`git rev-parse --short HEAD`
 pushd $REPO_ROOT
-docker build --build-arg NETWORK="${network}" -f docker/node/Dockerfile -t flairr-node${network_tag}:latest .
+docker build --build-arg NETWORK="${network}" -f docker/node/Dockerfile -t nano-node${network_tag}:latest .
 popd

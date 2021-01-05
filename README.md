@@ -4,32 +4,52 @@
 </div>
 <hr />
 
-[![Build Status](https://travis-ci.org/nanocurrency/nano-node.svg?branch=master)](https://travis-ci.org/nanocurrency/nano-node)
-[![Build status](https://ci.appveyor.com/api/projects/status/q66rbt2ux6apjj03/branch/master?svg=true)](https://ci.appveyor.com/project/argakiig/raiblocks/branch/master)
-### What is Flairr?
+[![Live Artifacts](https://github.com/nanocurrency/nano-node/workflows/Live/badge.svg)](https://github.com/nanocurrency/nano-node/actions?query=workflow%3ALive)
+[![Beta Artifacts](https://github.com/nanocurrency/nano-node/workflows/Beta/badge.svg)](https://github.com/nanocurrency/nano-node/actions?query=workflow%3ABeta)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/nanocurrency/nano-node)](https://github.com/nanocurrency/nano-node/releases/latest)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/nanocurrency/nano-node?color=darkblue&label=beta)](https://github.com/nanocurrency/nano-node/tags)
+[![Tests](https://github.com/nanocurrency/nano-node/workflows/Tests/badge.svg)](https://github.com/nanocurrency/nano-node/actions?query=workflow%3ATests)
+[![RelWithDebug Tests](https://github.com/nanocurrency/nano-node/workflows/Release%20Tests/badge.svg)](https://github.com/nanocurrency/nano-node/actions?query=workflow%3A%22Release+Tests%22)
+[![Discord](https://img.shields.io/badge/discord-join%20chat-orange.svg)](https://chat.nano.org)
 
 ---
 
-Flairr's goal is to become _"a global currency with instantaneous transactions and zero fees over a secure, decentralized network."_
+### What is Nano?
 
-We've applied the philosophy of _"do one thing and do it well."_ We are focused on building the best medium for value exchange in the world.
+Nano is a digital payment protocol designed to be accessible and lightweight, with a focus on removing inefficiencies present in other cryptocurrencies. With ultrafast transactions and zero fees on a secure, green and decentralized network, this makes Nano ideal for everyday transactions.
 
 ---
 
-### Key Features
+### Guides & Documentation
 
-* Flairr utilizes a novel [block-lattice](https://github.com/nanocurrency/nano-node/wiki/Block-lattice) architecture, unlike conventional blockchains used in many other cryptocurrencies.
-* The network requires minimal resources, no high-power mining hardware, and can process high transaction throughput.
-* Offers instantaneous transactions with zero fees and unlimited scalability, making Flairr an ideal solution for peer-to-peer transactions.
+* [Whitepaper](https://nano.org/en/whitepaper)
+* [Running a Node](https://docs.nano.org/running-a-node/overview/)
+* [Integration Guides](https://docs.nano.org/integration-guides/the-basics/)
+* [Command Line Interface](https://docs.nano.org/commands/command-line-interface/)
+* [RPC Protocol](https://docs.nano.org/commands/rpc-protocol/)
 
-For more information, see [flairrcoin.com](https://flairrcoin.com/) or read the [whitepaper](https://flairrcoin.com/wp-content/uploads/2020/08/Whitepaper.pdf).
+Other documentation details can be found at https://docs.nano.org.
 
+---
 
 ### Links & Resources
 
-* [Flairr Website](https://flairrcoin.com)
+* [Nano Website](https://nano.org)
+* [Documentation](https://docs.nano.org)
+* [Discord Chat](https://chat.nano.org/)
+* [Reddit](https://reddit.com/r/nanocurrency)
+* [Medium](https://medium.com/nanocurrency)
+* [Twitter](https://twitter.com/nano)
+
+---
+
+### Want to Contribute?
+
+Please see the [contributors guide](https://docs.nano.org/protocol-design/overview/#contributing-code-to-the-nano-node).
+
+---
 
 ### Contact us
 
 We want to hear about any trouble, success, delight, or pain you experience when
-using Flairr. Let us know here! [Contact us!](https://flairrcoin.com/?page_id=42)
+using Nano. Let us know by [filing an issue](https://github.com/nanocurrency/nano-node/issues), joining us on [Reddit](https://reddit.com/r/nanocurrency), or joining us on [Discord](https://chat.nano.org/).

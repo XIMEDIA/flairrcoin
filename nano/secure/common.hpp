@@ -1,17 +1,20 @@
 #pragma once
 
+#include <nano/crypto/blake2/blake2.h>
 #include <nano/lib/blockbuilders.hpp>
 #include <nano/lib/blocks.hpp>
+#include <nano/lib/config.hpp>
+#include <nano/lib/epoch.hpp>
+#include <nano/lib/numbers.hpp>
+#include <nano/lib/rep_weights.hpp>
 #include <nano/lib/utility.hpp>
-#include <nano/secure/utility.hpp>
 
 #include <boost/iterator/transform_iterator.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/variant.hpp>
+#include <boost/optional/optional.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
+#include <boost/variant/variant.hpp>
 
 #include <unordered_map>
-
-#include <crypto/blake2/blake2.h>
 
 namespace boost
 {
@@ -20,8 +23,25 @@ struct hash<::nano::uint256_union>
 {
 	size_t operator() (::nano::uint256_union const & value_a) const
 	{
-		std::hash<::nano::uint256_union> hash;
-		return hash (value_a);
+		return std::hash<::nano::uint256_union> () (value_a);
+	}
+};
+
+template <>
+struct hash<::nano::block_hash>
+{
+	size_t operator() (::nano::block_hash const & value_a) const
+	{
+		return std::hash<::nano::block_hash> () (value_a);
+	}
+};
+
+template <>
+struct hash<::nano::public_key>
+{
+	size_t operator() (::nano::public_key const & value_a) const
+	{
+		return std::hash<::nano::public_key> () (value_a);
 	}
 };
 template <>
@@ -29,24 +49,28 @@ struct hash<::nano::uint512_union>
 {
 	size_t operator() (::nano::uint512_union const & value_a) const
 	{
-		std::hash<::nano::uint512_union> hash;
-		return hash (value_a);
+		return std::hash<::nano::uint512_union> () (value_a);
+	}
+};
+template <>
+struct hash<::nano::qualified_root>
+{
+	size_t operator() (::nano::qualified_root const & value_a) const
+	{
+		return std::hash<::nano::qualified_root> () (value_a);
+	}
+};
+template <>
+struct hash<::nano::root>
+{
+	size_t operator() (::nano::root const & value_a) const
+	{
+		return std::hash<::nano::root> () (value_a);
 	}
 };
 }
 namespace nano
 {
-const uint8_t protocol_version = 0x10;
-const uint8_t protocol_version_min = 0x0d;
-const uint8_t node_id_version = 0x0c;
-
-/*
- * Do not bootstrap from nodes older than this version.
- * Also, on the beta network do not process messages from
- * nodes older than this version.
- */
-const uint8_t protocol_version_reasonable_min = 0x0d;
-
 /**
  * A key pair. The private key is generated from the random pool, or passed in
  * as a hex string. The public key is derived using ed25519.
@@ -62,69 +86,56 @@ public:
 };
 
 /**
- * Tag for which epoch an entry belongs to
- */
-enum class epoch : uint8_t
-{
-	invalid = 0,
-	unspecified = 1,
-	epoch_0 = 2,
-	epoch_1 = 3
-};
-
-/**
  * Latest information about an account
  */
-class account_info
+class account_info final
 {
 public:
-	account_info ();
-	account_info (nano::account_info const &) = default;
-	account_info (nano::block_hash const &, nano::block_hash const &, nano::block_hash const &, nano::amount const &, uint64_t, uint64_t, epoch);
-	void serialize (nano::stream &) const;
+	account_info () = default;
+	account_info (nano::block_hash const &, nano::account const &, nano::block_hash const &, nano::amount const &, uint64_t, uint64_t, epoch);
 	bool deserialize (nano::stream &);
 	bool operator== (nano::account_info const &) const;
 	bool operator!= (nano::account_info const &) const;
 	size_t db_size () const;
-	nano::block_hash head;
-	nano::block_hash rep_block;
-	nano::block_hash open_block;
-	nano::amount balance;
+	nano::epoch epoch () const;
+	nano::block_hash head{ 0 };
+	nano::account representative{ 0 };
+	nano::block_hash open_block{ 0 };
+	nano::amount balance{ 0 };
 	/** Seconds since posix epoch */
-	uint64_t modified;
-	uint64_t block_count;
-	nano::epoch epoch;
+	uint64_t modified{ 0 };
+	uint64_t block_count{ 0 };
+	nano::epoch epoch_m{ nano::epoch::epoch_0 };
 };
 
 /**
  * Information on an uncollected send
  */
-class pending_info
+class pending_info final
 {
 public:
-	pending_info ();
-	pending_info (nano::account const &, nano::amount const &, epoch);
-	void serialize (nano::stream &) const;
+	pending_info () = default;
+	pending_info (nano::account const &, nano::amount const &, nano::epoch);
+	size_t db_size () const;
 	bool deserialize (nano::stream &);
 	bool operator== (nano::pending_info const &) const;
-	nano::account source;
-	nano::amount amount;
-	nano::epoch epoch;
+	nano::account source{ 0 };
+	nano::amount amount{ 0 };
+	nano::epoch epoch{ nano::epoch::epoch_0 };
 };
-class pending_key
+class pending_key final
 {
 public:
-	pending_key ();
+	pending_key () = default;
 	pending_key (nano::account const &, nano::block_hash const &);
-	void serialize (nano::stream &) const;
 	bool deserialize (nano::stream &);
 	bool operator== (nano::pending_key const &) const;
-	nano::account account;
-	nano::block_hash hash;
-	nano::block_hash key () const;
+	nano::account const & key () const;
+	nano::account account{ 0 };
+	nano::block_hash hash{ 0 };
 };
 
-class endpoint_key
+class endpoint_key final
 {
 public:
 	endpoint_key () = default;
@@ -156,8 +167,17 @@ enum class no_value
 	dummy
 };
 
-// Internally unchecked_key is equal to pending_key (2x uint256_union)
-using unchecked_key = pending_key;
+class unchecked_key final
+{
+public:
+	unchecked_key () = default;
+	unchecked_key (nano::block_hash const &, nano::block_hash const &);
+	bool deserialize (nano::stream &);
+	bool operator== (nano::unchecked_key const &) const;
+	nano::block_hash const & key () const;
+	nano::block_hash previous{ 0 };
+	nano::block_hash hash{ 0 };
+};
 
 /**
  * Tag for block signature verification result
@@ -173,52 +193,55 @@ enum class signature_verification : uint8_t
 /**
  * Information on an unchecked block
  */
-class unchecked_info
+class unchecked_info final
 {
 public:
-	unchecked_info ();
-	unchecked_info (std::shared_ptr<nano::block>, nano::account const &, uint64_t, nano::signature_verification = nano::signature_verification::unknown);
+	unchecked_info () = default;
+	unchecked_info (std::shared_ptr<nano::block>, nano::account const &, uint64_t, nano::signature_verification = nano::signature_verification::unknown, bool = false);
 	void serialize (nano::stream &) const;
 	bool deserialize (nano::stream &);
-	bool operator== (nano::unchecked_info const &) const;
 	std::shared_ptr<nano::block> block;
-	nano::account account;
+	nano::account account{ 0 };
 	/** Seconds since posix epoch */
-	uint64_t modified;
-	nano::signature_verification verified;
+	uint64_t modified{ 0 };
+	nano::signature_verification verified{ nano::signature_verification::unknown };
+	bool confirmed{ false };
 };
 
-class block_info
+class block_info final
 {
 public:
-	block_info ();
+	block_info () = default;
 	block_info (nano::account const &, nano::amount const &);
+	nano::account account{ 0 };
+	nano::amount balance{ 0 };
+};
+
+class confirmation_height_info final
+{
+public:
+	confirmation_height_info () = default;
+	confirmation_height_info (uint64_t, nano::block_hash const &);
 	void serialize (nano::stream &) const;
 	bool deserialize (nano::stream &);
-	bool operator== (nano::block_info const &) const;
-	nano::account account;
-	nano::amount balance;
+	uint64_t height;
+	nano::block_hash frontier;
 };
-class block_counts
+
+namespace confirmation_height
 {
-public:
-	block_counts ();
-	size_t sum ();
-	size_t send;
-	size_t receive;
-	size_t open;
-	size_t change;
-	size_t state_v0;
-	size_t state_v1;
-};
-typedef std::vector<boost::variant<std::shared_ptr<nano::block>, nano::block_hash>>::const_iterator vote_blocks_vec_iter;
-class iterate_vote_blocks_as_hash
+	/** When the uncemented count (block count - cemented count) is less than this use the unbounded processor */
+	uint64_t const unbounded_cutoff{ 16384 };
+}
+
+using vote_blocks_vec_iter = std::vector<boost::variant<std::shared_ptr<nano::block>, nano::block_hash>>::const_iterator;
+class iterate_vote_blocks_as_hash final
 {
 public:
 	iterate_vote_blocks_as_hash () = default;
 	nano::block_hash operator() (boost::variant<std::shared_ptr<nano::block>, nano::block_hash> const & item) const;
 };
-class vote
+class vote final
 {
 public:
 	vote () = default;
@@ -226,16 +249,17 @@ public:
 	vote (bool &, nano::stream &, nano::block_uniquer * = nullptr);
 	vote (bool &, nano::stream &, nano::block_type, nano::block_uniquer * = nullptr);
 	vote (nano::account const &, nano::raw_key const &, uint64_t, std::shared_ptr<nano::block>);
-	vote (nano::account const &, nano::raw_key const &, uint64_t, std::vector<nano::block_hash>);
+	vote (nano::account const &, nano::raw_key const &, uint64_t, std::vector<nano::block_hash> const &);
 	std::string hashes_string () const;
-	nano::uint256_union hash () const;
-	nano::uint256_union full_hash () const;
+	nano::block_hash hash () const;
+	nano::block_hash full_hash () const;
 	bool operator== (nano::vote const &) const;
 	bool operator!= (nano::vote const &) const;
-	void serialize (nano::stream &, nano::block_type);
-	void serialize (nano::stream &);
+	void serialize (nano::stream &, nano::block_type) const;
+	void serialize (nano::stream &) const;
+	void serialize_json (boost::property_tree::ptree & tree) const;
 	bool deserialize (nano::stream &, nano::block_uniquer * = nullptr);
-	bool validate ();
+	bool validate () const;
 	boost::transform_iterator<nano::iterate_vote_blocks_as_hash, nano::vote_blocks_vec_iter> begin () const;
 	boost::transform_iterator<nano::iterate_vote_blocks_as_hash, nano::vote_blocks_vec_iter> end () const;
 	std::string to_json () const;
@@ -252,10 +276,10 @@ public:
 /**
  * This class serves to find and return unique variants of a vote in order to minimize memory usage
  */
-class vote_uniquer
+class vote_uniquer final
 {
 public:
-	using value_type = std::pair<const nano::uint256_union, std::weak_ptr<nano::vote>>;
+	using value_type = std::pair<const nano::block_hash, std::weak_ptr<nano::vote>>;
 
 	vote_uniquer (nano::block_uniquer &);
 	std::shared_ptr<nano::vote> unique (std::shared_ptr<nano::vote>);
@@ -268,13 +292,14 @@ private:
 	static unsigned constexpr cleanup_count = 2;
 };
 
-std::unique_ptr<seq_con_info_component> collect_seq_con_info (vote_uniquer & vote_uniquer, const std::string & name);
+std::unique_ptr<container_info_component> collect_container_info (vote_uniquer & vote_uniquer, const std::string & name);
 
 enum class vote_code
 {
 	invalid, // Vote is not signed correctly
 	replay, // Vote does not have the highest sequence number, it's a replay
-	vote // Vote has the highest sequence number
+	vote, // Vote has the highest sequence number
+	indeterminate // Unknown if replay or vote
 };
 
 enum class process_result
@@ -290,17 +315,15 @@ enum class process_result
 	opened_burn_account, // The impossible happened, someone found the private key associated with the public key '0'.
 	balance_mismatch, // Balance and amount delta don't match
 	representative_mismatch, // Representative is changed when it is not allowed
-	block_position // This block cannot follow the previous block
+	block_position, // This block cannot follow the previous block
+	insufficient_work // Insufficient work for this block, even though it passed the minimal validation
 };
-class process_return
+class process_return final
 {
 public:
 	nano::process_result code;
-	nano::account account;
-	nano::amount amount;
-	nano::account pending_account;
-	boost::optional<bool> state_is_send;
 	nano::signature_verification verified;
+	nano::amount previous_balance;
 };
 enum class tally_result
 {
@@ -308,25 +331,207 @@ enum class tally_result
 	changed,
 	confirm
 };
-extern nano::keypair const & zero_key;
-extern nano::keypair const & test_genesis_key;
-extern nano::account const & nano_test_account;
-extern nano::account const & nano_beta_account;
-extern nano::account const & nano_live_account;
-extern std::string const & nano_test_genesis;
-extern std::string const & nano_beta_genesis;
-extern std::string const & nano_live_genesis;
-extern std::string const & genesis_block;
-extern nano::account const & genesis_account;
-extern nano::account const & burn_account;
-extern nano::uint128_t const & genesis_amount;
-// An account number that compares inequal to any real account number
-extern nano::account const & not_an_account ();
-class genesis
+
+class genesis final
 {
 public:
-	explicit genesis ();
+	genesis ();
 	nano::block_hash hash () const;
 	std::shared_ptr<nano::block> open;
 };
+
+class network_params;
+
+/** Protocol versions whose value may depend on the active network */
+class protocol_constants
+{
+public:
+	/** Current protocol version */
+	uint8_t const protocol_version = 0x12;
+
+	/** Minimum accepted protocol version */
+	uint8_t protocol_version_min (bool epoch_2_started) const;
+
+	/** Do not request telemetry metrics to nodes older than this version */
+	uint8_t const telemetry_protocol_version_min = 0x12;
+
+private:
+	/* Minimum protocol version before an epoch 2 block is seen */
+	uint8_t const protocol_version_min_pre_epoch_2 = 0x11;
+	/* Minimum protocol version after an epoch 2 block is seen */
+	uint8_t const protocol_version_min_epoch_2 = 0x12;
+};
+
+// Some places use the decltype of protocol_version instead of protocol_version_min. To keep those checks simpler we check that the decltypes match ignoring differences in const
+static_assert (std::is_same<std::remove_const_t<decltype (protocol_constants ().protocol_version)>, decltype (protocol_constants ().protocol_version_min (false))>::value, "protocol_min should match");
+
+/** Genesis keys and ledger constants for network variants */
+class ledger_constants
+{
+public:
+	ledger_constants (nano::network_constants & network_constants);
+	ledger_constants (nano::nano_networks network_a);
+	nano::keypair zero_key;
+	nano::keypair dev_genesis_key;
+	nano::account nano_dev_account;
+	nano::account nano_beta_account;
+	nano::account nano_live_account;
+	nano::account nano_test_account;
+	std::string nano_dev_genesis;
+	std::string nano_beta_genesis;
+	std::string nano_live_genesis;
+	std::string nano_test_genesis;
+	nano::account genesis_account;
+	std::string genesis_block;
+	nano::block_hash genesis_hash;
+	nano::uint128_t genesis_amount;
+	nano::account burn_account;
+	nano::epochs epochs;
+};
+
+/** Constants which depend on random values (this class should never be used globally due to CryptoPP globals potentially not being initialized) */
+class random_constants
+{
+public:
+	random_constants ();
+	nano::account not_an_account;
+	nano::uint128_union random_128;
+};
+
+/** Node related constants whose value depends on the active network */
+class node_constants
+{
+public:
+	node_constants (nano::network_constants & network_constants);
+	std::chrono::seconds period;
+	std::chrono::milliseconds half_period;
+	/** Default maximum idle time for a socket before it's automatically closed */
+	std::chrono::seconds idle_timeout;
+	std::chrono::seconds cutoff;
+	std::chrono::seconds syn_cookie_cutoff;
+	std::chrono::minutes backup_interval;
+	std::chrono::seconds bootstrap_interval;
+	std::chrono::seconds search_pending_interval;
+	std::chrono::seconds peer_interval;
+	std::chrono::minutes unchecked_cleaning_interval;
+	std::chrono::milliseconds process_confirmed_interval;
+	/** Maximum number of peers per IP */
+	size_t max_peers_per_ip;
+
+	/** The maximum amount of samples for a 2 week period on live or 1 day on beta */
+	uint64_t max_weight_samples;
+	uint64_t weight_period;
+};
+
+/** Voting related constants whose value depends on the active network */
+class voting_constants
+{
+public:
+	voting_constants (nano::network_constants & network_constants);
+	size_t max_cache;
+};
+
+/** Port-mapping related constants whose value depends on the active network */
+class portmapping_constants
+{
+public:
+	portmapping_constants (nano::network_constants & network_constants);
+	// Timeouts are primes so they infrequently happen at the same time
+	std::chrono::seconds lease_duration;
+	std::chrono::seconds health_check_period;
+};
+
+/** Bootstrap related constants whose value depends on the active network */
+class bootstrap_constants
+{
+public:
+	bootstrap_constants (nano::network_constants & network_constants);
+	uint32_t lazy_max_pull_blocks;
+	uint32_t lazy_min_pull_blocks;
+	unsigned frontier_retry_limit;
+	unsigned lazy_retry_limit;
+	unsigned lazy_destinations_retry_limit;
+	std::chrono::milliseconds gap_cache_bootstrap_start_interval;
+};
+
+/** Constants whose value depends on the active network */
+class network_params
+{
+public:
+	/** Populate values based on the current active network */
+	network_params ();
+
+	/** Populate values based on \p network_a */
+	network_params (nano::nano_networks network_a);
+
+	std::array<uint8_t, 2> header_magic_number;
+	unsigned kdf_work;
+	network_constants network;
+	protocol_constants protocol;
+	ledger_constants ledger;
+	random_constants random;
+	voting_constants voting;
+	node_constants node;
+	portmapping_constants portmapping;
+	bootstrap_constants bootstrap;
+};
+
+enum class confirmation_height_mode
+{
+	automatic,
+	unbounded,
+	bounded
+};
+
+/* Holds flags for various cacheable data. For most CLI operations caching is unnecessary
+ * (e.g getting the cemented block count) so it can be disabled for performance reasons. */
+class generate_cache
+{
+public:
+	bool reps = true;
+	bool cemented_count = true;
+	bool unchecked_count = true;
+	bool account_count = true;
+	bool epoch_2 = true;
+	bool block_count = true;
+
+	void enable_all ();
+};
+
+/* Holds an in-memory cache of various counts */
+class ledger_cache
+{
+public:
+	nano::rep_weights rep_weights;
+	std::atomic<uint64_t> cemented_count{ 0 };
+	std::atomic<uint64_t> block_count{ 0 };
+	std::atomic<uint64_t> account_count{ 0 };
+	std::atomic<bool> epoch_2_started{ false };
+};
+
+/* Defines the possible states for an election to stop in */
+enum class election_status_type : uint8_t
+{
+	ongoing = 0,
+	active_confirmed_quorum = 1,
+	active_confirmation_height = 2,
+	inactive_confirmation_height = 3,
+	stopped = 5
+};
+
+/* Holds a summary of an election */
+class election_status final
+{
+public:
+	std::shared_ptr<nano::block> winner;
+	nano::amount tally;
+	std::chrono::milliseconds election_end;
+	std::chrono::milliseconds election_duration;
+	unsigned confirmation_request_count;
+	unsigned block_count;
+	unsigned voter_count;
+	election_status_type type;
+};
+
+nano::wallet_id random_wallet_id ();
 }
