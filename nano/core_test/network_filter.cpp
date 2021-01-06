@@ -37,7 +37,8 @@ TEST (network_filter, unit)
 	{
 		one_block (genesis.open, true);
 	}
-	auto new_block (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, genesis.open->hash (), nano::dev_genesis_key.pub, nano::genesis_amount - 10 * nano::xrb_ratio, nano::public_key (), nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, 0));
+	// FLR_ratio changed from xrb_ratio
+	auto new_block (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, genesis.open->hash (), nano::dev_genesis_key.pub, nano::genesis_amount - 10 * nano::FLR_ratio, nano::public_key (), nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, 0));
 	one_block (new_block, false);
 	for (int i = 0; i < 10; ++i)
 	{
@@ -57,7 +58,8 @@ TEST (network_filter, many)
 	nano::keypair key1;
 	for (int i = 0; i < 100; ++i)
 	{
-		auto block (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, genesis.open->hash (), nano::dev_genesis_key.pub, nano::genesis_amount - i * 10 * nano::xrb_ratio, key1.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, 0));
+		// FLR_ratio changed from xrb_ratio
+		auto block (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, genesis.open->hash (), nano::dev_genesis_key.pub, nano::genesis_amount - i * 10 * nano::FLR_ratio, key1.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, 0));
 
 		nano::publish message (block);
 		auto bytes (message.to_bytes (false));

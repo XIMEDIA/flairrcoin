@@ -377,9 +377,10 @@ TEST (bootstrap_processor, frontiers_unconfirmed)
 	node_flags.disable_rep_crawler = false;
 	auto node2 = system.add_node (node_config, node_flags);
 	// Generating valid chain
-	auto send3 (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, genesis.hash (), nano::dev_genesis_key.pub, nano::genesis_amount - nano::xrb_ratio, key1.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, *system.work.generate (genesis.hash ())));
+	// FLR_ratio changed from xrb_ratio
+	auto send3 (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, genesis.hash (), nano::dev_genesis_key.pub, nano::genesis_amount - nano::FLR_ratio, key1.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, *system.work.generate (genesis.hash ())));
 	ASSERT_EQ (nano::process_result::progress, node2->process (*send3).code);
-	auto open3 (std::make_shared<nano::state_block> (key1.pub, 0, key1.pub, nano::xrb_ratio, send3->hash (), key1.prv, key1.pub, *system.work.generate (key1.pub)));
+	auto open3 (std::make_shared<nano::state_block> (key1.pub, 0, key1.pub, nano::FLR_ratio, send3->hash (), key1.prv, key1.pub, *system.work.generate (key1.pub)));
 	ASSERT_EQ (nano::process_result::progress, node2->process (*open3).code);
 	system.wallet (1)->insert_adhoc (nano::dev_genesis_key.prv);
 
@@ -972,8 +973,7 @@ TEST (frontier_req, count)
 	auto node1 = system.nodes[0];
 	nano::genesis genesis;
 	// Public key FB93... after genesis in accounts table
-	// Change this (maybe)
-	nano::keypair key1 ("ED5AE0A6505B14B67435C29FD9FEEBC26F597D147BC92F6D795FFAD7AFD3D967");
+	nano::keypair key1 ("Xxxxxxxxxxxxxxxxx_ChangeMe_Xxxxxxxxxxxxxxxxxxx"); // Xxxxxxxxxxxxxxxxx_ChangeMe_Xxxxxxxxxxxxxxxxxxx changed from ED5AE0A6505B14B67435C29FD9FEEBC26F597D147BC92F6D795FFAD7AFD3D967
 	// gFLR_ratio changed from Gxrb_ratio
 	nano::state_block send1 (nano::dev_genesis_key.pub, genesis.hash (), nano::dev_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, key1.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, 0);
 	node1->work_generate_blocking (send1);

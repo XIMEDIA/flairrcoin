@@ -70,7 +70,8 @@ TEST (vote_generator, multiple_representatives)
 	wallet.insert_adhoc (key1.prv);
 	wallet.insert_adhoc (key2.prv);
 	wallet.insert_adhoc (key3.prv);
-	auto const amount = 100 * nano::Gxrb_ratio;
+	// gFLR_ratio changed from Gxrb_ratio
+	auto const amount = 100 * nano::gFLR_ratio;
 	wallet.send_sync (nano::dev_genesis_key.pub, key1.pub, amount);
 	wallet.send_sync (nano::dev_genesis_key.pub, key2.pub, amount);
 	wallet.send_sync (nano::dev_genesis_key.pub, key3.pub, amount);
