@@ -51,8 +51,8 @@ nano::node_config::node_config(uint16_t peering_port_a, nano::logging const &log
 	{
 		preconfigured_peers.push_back(default_beta_peer_network);
 		nano::account offline_representative;
-		// [Xxxxxxxxxxxxxxxxx_ChangeMe_Xxxxxxxxxxxxxxxxxxx] changed from [nano_1defau1t9off1ine9rep99999999999999999999999999999999wgmuzxxy]
-		release_assert(!offline_representative.decode_account("Xxxxxxxxxxxxxxxxx_ChangeMe_Xxxxxxxxxxxxxxxxxxx"));
+		// [flr_1defau1t9off1ine9rep99999999999999999999999999999999wgmuzxxy] changed from [nano_1defau1t9off1ine9rep99999999999999999999999999999999wgmuzxxy]
+		release_assert(!offline_representative.decode_account("flr_1defau1t9off1ine9rep99999999999999999999999999999999wgmuzxxy"));
 		preconfigured_representatives.emplace_back(offline_representative);
 		break;
 	}
