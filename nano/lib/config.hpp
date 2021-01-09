@@ -20,6 +20,7 @@ namespace filesystem
 /**
 * Returns build version information
 */
+// Does NANO_ get changed
 const char * const NANO_VERSION_STRING = xstr (TAG_VERSION_STRING);
 const char * const NANO_MAJOR_VERSION_STRING = xstr (MAJOR_VERSION_STRING);
 const char * const NANO_MINOR_VERSION_STRING = xstr (MINOR_VERSION_STRING);
@@ -53,6 +54,8 @@ uint8_t get_pre_release_node_version ();
  * Network variants with different genesis blocks and network parameters
  * @warning Enum values are used in integral comparisons; do not change.
  */
+
+// Does nano_ and rai_ get changed, potential new variable
 enum class nano_networks
 {
 	// Low work parameters, publicly known genesis key, dev IP ports
@@ -102,6 +105,7 @@ public:
 	{
 	}
 
+	// Does nano_ get changed
 	network_constants (nano_networks network_a) :
 	current_network (network_a),
 	publish_thresholds ((is_live_network () || is_test_network ()) ? publish_full : is_beta_network () ? publish_beta : publish_dev)
@@ -125,6 +129,7 @@ public:
 	static const char * active_network_err_msg;
 
 	/** The network this param object represents. This may differ from the global active network; this is needed for certain --debug... commands */
+	// Does nano_ get changed
 	nano_networks current_network{ nano::network_constants::active_network };
 	nano::work_thresholds publish_thresholds;
 
@@ -136,6 +141,7 @@ public:
 	unsigned request_interval_ms;
 
 	/** Returns the network this object contains values for */
+	// Does nano_ get changed
 	nano_networks network () const
 	{
 		return current_network;
@@ -146,6 +152,7 @@ public:
 	 * If not called, the compile-time option will be used.
 	 * @param network_a The new active network
 	 */
+	// Does nano_ get changed
 	static void set_active_network (nano_networks network_a)
 	{
 		active_network = network_a;
@@ -156,6 +163,8 @@ public:
 	 * If not called, the compile-time option will be used.
 	 * @param network_a The new active network. Valid values are "live", "beta" and "dev"
 	 */
+	
+	// Does nano_ get changed, potential new variable
 	static bool set_active_network (std::string network_a)
 	{
 		auto error{ false };
@@ -187,6 +196,7 @@ public:
 		return is_live_network () ? "live" : is_beta_network () ? "beta" : is_test_network () ? "test" : "dev";
 	}
 
+	// Does nano_ get changed, potential new variable
 	bool is_live_network () const
 	{
 		return current_network == nano_networks::nano_live_network;
@@ -205,6 +215,7 @@ public:
 	}
 
 	/** Initial value is ACTIVE_NETWORK compile flag, but can be overridden by a CLI flag */
+	// Does nano_ get changed
 	static nano::nano_networks active_network;
 };
 

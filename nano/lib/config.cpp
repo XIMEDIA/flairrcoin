@@ -27,6 +27,7 @@ work_thresholds const network_constants::publish_dev (
 
 const char * network_constants::active_network_err_msg = "Invalid network. Valid values are live, test, beta and dev.";
 
+// Does NANO_ get changed
 uint8_t get_major_node_version ()
 {
 	return boost::numeric_cast<uint8_t> (boost::lexical_cast<int> (NANO_MAJOR_VERSION_STRING));
@@ -46,6 +47,7 @@ uint8_t get_pre_release_node_version ()
 
 void force_nano_dev_network ()
 {
+	// Does nano_ get changed
 	nano::network_constants::set_active_network (nano::nano_networks::nano_dev_network);
 }
 

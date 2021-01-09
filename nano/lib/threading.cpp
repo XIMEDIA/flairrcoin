@@ -127,6 +127,7 @@ io_guard (boost::asio::make_work_guard (io_ctx_a))
 			nano::thread_role::set (nano::thread_role::name::io);
 			try
 			{
+// Does NANO_ASIO_HANDLER_TRACKING get changed
 #if NANO_ASIO_HANDLER_TRACKING == 0
 				io_ctx_a.run ();
 #else

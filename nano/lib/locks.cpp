@@ -21,6 +21,7 @@ template <typename Mutex>
 void output_if_held_long_enough (nano::timer<std::chrono::milliseconds> & timer, Mutex & mutex)
 {
 	auto time_held = timer.since_start ();
+	// Does NANO_TIMED_LOCKS get changed?
 	if (time_held >= std::chrono::milliseconds (NANO_TIMED_LOCKS))
 	{
 		output ("held", time_held, mutex);
@@ -31,11 +32,13 @@ void output_if_held_long_enough (nano::timer<std::chrono::milliseconds> & timer,
 	}
 }
 
+// Does NANO_TIMED_LOCKS_IGNORE_BLOCKED get changed?
 #ifndef NANO_TIMED_LOCKS_IGNORE_BLOCKED
 template <typename Mutex>
 void output_if_blocked_long_enough (nano::timer<std::chrono::milliseconds> & timer, Mutex & mutex)
 {
 	auto time_blocked = timer.since_start ();
+	// Does NANO_TIMED_LOCKS get changed?
 	if (time_blocked >= std::chrono::milliseconds (NANO_TIMED_LOCKS))
 	{
 		output ("blocked", time_blocked, mutex);
@@ -54,6 +57,7 @@ mut (mutex)
 	timer.start ();
 
 	mut.lock ();
+// Does NANO_TIMED_LOCKS_IGNORE_BLOCKED get changed?
 #ifndef NANO_TIMED_LOCKS_IGNORE_BLOCKED
 	output_if_blocked_long_enough (timer, mut);
 #endif
@@ -85,6 +89,7 @@ void unique_lock<Mutex, U>::lock_impl ()
 
 	mut->lock ();
 	owns = true;
+// Does NANO_TIMED_LOCKS_IGNORE_BLOCKED get changed?
 #ifndef NANO_TIMED_LOCKS_IGNORE_BLOCKED
 	output_if_blocked_long_enough (timer, *mut);
 #endif

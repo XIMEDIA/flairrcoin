@@ -1,5 +1,6 @@
 #pragma once
 
+// Does NANO_TIMED_LOCKS get changed?
 #if NANO_TIMED_LOCKS > 0
 #include <nano/lib/timer.hpp>
 #endif
