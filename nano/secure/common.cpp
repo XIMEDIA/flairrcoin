@@ -31,15 +31,17 @@ char const * dev_public_key_data = "B0311EA55708D6A53C75CDBF88300259C6D018522FE3
 char const * beta_public_key_data = "259A4384075F73E19BEE72C0F23C491E30A678FBBD31D55D3982099D3CDA8116"; // nano_1betag41gqumw8fywwp1yay6k9jinswhqhbjtogmm1ibmnyfo1apej3medr3
 char const * live_public_key_data = "E89208DD038FBB269987689621D52292AE9C35941A7484756ECCED92A65093BA"; // xrb_3t6k35gi95xu6tergt6p69ck76ogmitsa8mnijtpxm9fkcm736xtoncuohr3
 char const * test_public_key_data = "45C6FF9D1706D61F0821327752671BDA9F9ED2DA40326B01935AB566FB9E08ED"; // nano_1jg8zygjg3pp5w644emqcbmjqpnzmubfni3kfe1s8pooeuxsw49fdq1mco9j
+// flr_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo changed from xrb_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo
 char const * dev_genesis_data = R"%%%({
 	"type": "open",
 	"source": "B0311EA55708D6A53C75CDBF88300259C6D018522FE3D4D0A242E431F9E8B6D0",
-	"representative": "xrb_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo",
-	"account": "xrb_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo",
+	"representative": "flr_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo",
+	"account": "flr_3e3j5tkog48pnny9dmfzj1r16pg8t1e76dz5tmac6iq689wyjfpiij4txtdo",
 	"work": "7b42a00ee91d5810",
 	"signature": "ECDA914373A2F0CA1296475BAEE40500A7F0A7AD72A5A80C81D7FAB7F6C802B2CC7DB50F5DD0FB25B2EF11761FA7344A158DD5A700B21BD47DE5BD0F63153A02"
 	})%%%";
 
+// Possible new variables (nano_...)
 char const * beta_genesis_data = R"%%%({
 	"type": "open",
 	"source": "259A4384075F73E19BEE72C0F23C491E30A678FBBD31D55D3982099D3CDA8116",
@@ -49,6 +51,7 @@ char const * beta_genesis_data = R"%%%({
 	"signature": "8E771BAC91958B2323A3613ACAAE8A01BB6DD2EA161FA57ADC7223DB37405D0F774B972EEE99D19E2572211E4C2A967E577F36F3DAFA29FAD2BC17911490DA08"
 	})%%%";
 
+// Possible new variables (xrb_...)
 char const * live_genesis_data = R"%%%({
 	"type": "open",
 	"source": "E89208DD038FBB269987689621D52292AE9C35941A7484756ECCED92A65093BA",
@@ -58,6 +61,7 @@ char const * live_genesis_data = R"%%%({
 	"signature": "9F0C933C8ADE004D808EA1985FA746A7E95BA2A38F867640F53EC8F180BDFE9E2C1268DEAD7C2664F356E37ABA362BC58E46DBA03E523A7B5A19E4B6EB12BB02"
 	})%%%";
 
+// Possible new variables (nano_...)
 char const * test_genesis_data = R"%%%({
 	"type": "open",
 	"source": "45C6FF9D1706D61F0821327752671BDA9F9ED2DA40326B01935AB566FB9E08ED",
@@ -105,6 +109,7 @@ ledger_constants (network_constants.network ())
 nano::ledger_constants::ledger_constants (nano::nano_networks network_a) :
 zero_key ("0"),
 dev_genesis_key (dev_private_key_data),
+// Possible new variables
 nano_dev_account (dev_public_key_data),
 nano_beta_account (beta_public_key_data),
 nano_live_account (live_public_key_data),
