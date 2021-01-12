@@ -27,11 +27,13 @@ boost::filesystem::path nano::working_path (bool legacy)
 		case nano::nano_networks::nano_beta_network:
 			if (!legacy)
 			{
+				// FlairrBeta changed from NanoBeta
 				result /= "FlairrBeta";
 			}
 			else
 			{
-				result /= "RaiBlocksBeta";
+				// FcBeta changed from RaiBlocksBeta
+				result /= "FcBeta";
 			}
 			break;
 		// Possible new variables
@@ -49,11 +51,13 @@ boost::filesystem::path nano::working_path (bool legacy)
 		case nano::nano_networks::nano_test_network:
 			if (!legacy)
 			{
+				// FlairrTest changed from NanoTest
 				result /= "FlairrTest";
 			}
 			else
 			{
-				result /= "RaiBlocksTest";
+				// FcTest changed from RaiBlocksTest
+				result /= "FcTest";
 			}
 			break;
 	}
