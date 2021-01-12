@@ -258,7 +258,8 @@ int main (int argc, char * const * argv)
 				std::sort (newcomers.begin (), newcomers.end (), [](auto const & left, auto const & right) { return left.second > right.second; });
 
 				auto newcomer_entry = [](auto const & rep) {
-					return boost::str (boost::format ("representative %1% hardcoded --- ledger %2%") % rep.first.to_account () % nano::uint128_union (rep.second).format_balance (nano::Mxrb_ratio, 0, true));
+					// mFLR_ratio changed from Mxrb_ratio
+					return boost::str (boost::format ("representative %1% hardcoded --- ledger %2%") % rep.first.to_account () % nano::uint128_union (rep.second).format_balance (nano::mFLR_ratio, 0, true));
 				};
 
 				std::cout << boost::str (boost::format ("hardcoded weight %1% Mnano at %2% blocks\nledger weight %3% Mnano at %4% blocks\nmismatched\n\tsamples %5%\n\ttotal %6% Mnano\n\tmean %7% Mnano\n\tsigma %8% Mnano\n")
@@ -907,6 +908,7 @@ int main (int argc, char * const * argv)
 		}
 		else if (vm.count ("debug_profile_process"))
 		{
+			// Should nano_dev_network be changed?
 			nano::network_constants::set_active_network (nano::nano_networks::nano_dev_network);
 			nano::network_params dev_params;
 			nano::block_builder builder;
@@ -1029,6 +1031,7 @@ int main (int argc, char * const * argv)
 		}
 		else if (vm.count ("debug_profile_votes"))
 		{
+			// Should nano_dev_network be changed?
 			nano::network_constants::set_active_network (nano::nano_networks::nano_dev_network);
 			nano::network_params dev_params;
 			nano::block_builder builder;
