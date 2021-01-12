@@ -370,9 +370,11 @@ class ledger_constants
 {
 public:
 	ledger_constants (nano::network_constants & network_constants);
+	// Possible new variables
 	ledger_constants (nano::nano_networks network_a);
 	nano::keypair zero_key;
 	nano::keypair dev_genesis_key;
+	// Possible new variables
 	nano::account nano_dev_account;
 	nano::account nano_beta_account;
 	nano::account nano_live_account;

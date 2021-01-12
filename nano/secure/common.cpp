@@ -21,6 +21,7 @@ size_t constexpr nano::open_block::size;
 size_t constexpr nano::change_block::size;
 size_t constexpr nano::state_block::size;
 
+// Should nano_networks be changed?
 nano::nano_networks nano::network_constants::active_network = nano::nano_networks::ACTIVE_NETWORK;
 
 namespace
@@ -80,6 +81,7 @@ network_params (network_constants::active_network)
 {
 }
 
+// Should nano_networks be changed?
 nano::network_params::network_params (nano::nano_networks network_a) :
 network (network_a), ledger (network), voting (network), node (network), portmapping (network), bootstrap (network)
 {
@@ -99,6 +101,7 @@ ledger_constants (network_constants.network ())
 {
 }
 
+// Should nano_networks be changed?
 nano::ledger_constants::ledger_constants (nano::nano_networks network_a) :
 zero_key ("0"),
 dev_genesis_key (dev_private_key_data),
@@ -110,6 +113,8 @@ nano_dev_genesis (dev_genesis_data),
 nano_beta_genesis (beta_genesis_data),
 nano_live_genesis (live_genesis_data),
 nano_test_genesis (test_genesis_data),
+// Should (nano_)networks, dev_network, dev_account, dev_genesis, beta_network, beta_genesis, test_network, test_network, live_genesis be changed?
+// Possible new variables
 genesis_account (network_a == nano::nano_networks::nano_dev_network ? nano_dev_account : network_a == nano::nano_networks::nano_beta_network ? nano_beta_account : network_a == nano::nano_networks::nano_test_network ? nano_test_account : nano_live_account),
 genesis_block (network_a == nano::nano_networks::nano_dev_network ? nano_dev_genesis : network_a == nano::nano_networks::nano_beta_network ? nano_beta_genesis : network_a == nano::nano_networks::nano_test_network ? nano_test_genesis : nano_live_genesis),
 genesis_hash (parse_block_from_genesis_data (genesis_block)->hash ()),
@@ -122,8 +127,9 @@ burn_account (0)
 	epochs.add (nano::epoch::epoch_1, genesis_account, epoch_link_v1);
 
 	nano::link epoch_link_v2;
+	// Possible new variables
 	nano::account nano_live_epoch_v2_signer;
-	auto error (nano_live_epoch_v2_signer.decode_account ("nano_3qb6o6i1tkzr6jwr5s7eehfxwg9x6eemitdinbpi7u8bjjwsgqfj4wzser3x"));
+	auto error (nano_live_epoch_v2_signer.decode_account ("flr_3qb6o6i1tkzr6jwr5s7eehfxwg9x6eemitdinbpi7u8bjjwsgqfj4wzser3x")); // flr_ changed from nano_
 	debug_assert (!error);
 	auto epoch_v2_signer (network_a == nano::nano_networks::nano_dev_network ? nano_dev_account : network_a == nano::nano_networks::nano_beta_network ? nano_beta_account : network_a == nano::nano_networks::nano_test_network ? nano_test_account : nano_live_epoch_v2_signer);
 	const char * epoch_message_v2 ("epoch v2 block");

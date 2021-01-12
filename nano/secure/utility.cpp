@@ -12,6 +12,7 @@ boost::filesystem::path nano::working_path (bool legacy)
 	auto result (nano::app_path ());
 	switch (network_constants.network ())
 	{
+		// Possible new variables
 		case nano::nano_networks::nano_dev_network:
 			if (!legacy)
 			{
@@ -22,16 +23,18 @@ boost::filesystem::path nano::working_path (bool legacy)
 				result /= "RaiBlocksDev";
 			}
 			break;
+		// Possible new variables
 		case nano::nano_networks::nano_beta_network:
 			if (!legacy)
 			{
-				result /= "NanoBeta";
+				result /= "FlairrBeta";
 			}
 			else
 			{
 				result /= "RaiBlocksBeta";
 			}
 			break;
+		// Possible new variables
 		case nano::nano_networks::nano_live_network:
 			if (!legacy)
 			{
@@ -42,10 +45,11 @@ boost::filesystem::path nano::working_path (bool legacy)
 				result /= "RaiBlocks";
 			}
 			break;
+		// Possible new variables
 		case nano::nano_networks::nano_test_network:
 			if (!legacy)
 			{
-				result /= "NanoTest";
+				result /= "FlairrTest";
 			}
 			else
 			{
