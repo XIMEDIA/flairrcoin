@@ -27,10 +27,13 @@ enum Blake2b_IV {
     iv7 = 0x5be0cd19137e2179UL,
 };
 
+// nano_xor_iv0 change to flairr_xor_iv0
+// nano_xor_iv4 change to flairr_xor_iv4
+// nano_xor_iv6 change to flairr_xor_iv6
 enum IV_Derived {
-    nano_xor_iv0 = 0x6a09e667f2bdc900UL,  // iv1 ^ 0x1010000 ^ outlen
-    nano_xor_iv4 = 0x510e527fade682f9UL,  // iv4 ^ inbytes
-    nano_xor_iv6 = 0xe07c265404be4294UL,  // iv6 ^ ~0
+    flairr_xor_iv0 = 0x6a09e667f2bdc900UL,  // iv1 ^ 0x1010000 ^ outlen
+    flairr_xor_iv4 = 0x510e527fade682f9UL,  // iv4 ^ inbytes
+    flairr_xor_iv6 = 0xe07c265404be4294UL,  // iv6 ^ ~0
 };
 
 #ifdef cl_amd_media_ops
@@ -82,13 +85,15 @@ static inline ulong rotr64(ulong x, int shift)
         G2v_split(m12, m13, m14, m15, 2, vv[7 / 2].s1, vv[4 / 2].s0, 8,        \
                   vv[13 / 2].s1, vv[14 / 2].s0);                               \
     } while (0)
-
+// nano_xor_iv0 change to flairr_xor_iv0
+// nano_xor_iv4 change to flairr_xor_iv4
+// nano_xor_iv6 change to flairr_xor_iv6
 static inline ulong blake2b(ulong const nonce, __constant ulong *h)
 {
     ulong2 vv[8] = {
-        {nano_xor_iv0, iv1}, {iv2, iv3},          {iv4, iv5},
+        {flairr_xor_iv0, iv1}, {iv2, iv3},          {iv4, iv5},
         {iv6, iv7},          {iv0, iv1},          {iv2, iv3},
-        {nano_xor_iv4, iv5}, {nano_xor_iv6, iv7},
+        {flairr_xor_iv4, iv5}, {flairr_xor_iv6, iv7},
     };
 
     ROUND(nonce, h[0], h[1], h[2], h[3], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -104,7 +109,8 @@ static inline ulong blake2b(ulong const nonce, __constant ulong *h)
     ROUND(nonce, h[0], h[1], h[2], h[3], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     ROUND(0, 0, h[3], 0, 0, 0, 0, 0, h[0], 0, nonce, h[1], 0, 0, 0, h[2]);
 
-    return nano_xor_iv0 ^ vv[0].s0 ^ vv[4].s0;
+// nano_xor_iv0 change to flairr_xor_iv0
+    return flairr_xor_iv0 ^ vv[0].s0 ^ vv[4].s0;
 }
 #undef G32
 #undef G2v

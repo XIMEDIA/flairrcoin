@@ -973,7 +973,7 @@ TEST (frontier_req, count)
 	auto node1 = system.nodes[0];
 	nano::genesis genesis;
 	// Public key FB93... after genesis in accounts table
-	nano::keypair key1 ("Xxxxxxxxxxxxxxxxx_ChangeMe_Xxxxxxxxxxxxxxxxxxx"); // Xxxxxxxxxxxxxxxxx_ChangeMe_Xxxxxxxxxxxxxxxxxxx changed from ED5AE0A6505B14B67435C29FD9FEEBC26F597D147BC92F6D795FFAD7AFD3D967
+	nano::keypair key1 ("ED5AE0A6505B14B67435C29FD9FEEBC26F597D147BC92F6D795FFAD7AFD3D967"); // Xxxxxxxxxxxxxxxxx_ChangeMe_Xxxxxxxxxxxxxxxxxxx changed from ED5AE0A6505B14B67435C29FD9FEEBC26F597D147BC92F6D795FFAD7AFD3D967
 	// gFLR_ratio changed from Gxrb_ratio
 	nano::state_block send1 (nano::dev_genesis_key.pub, genesis.hash (), nano::dev_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, key1.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, 0);
 	node1->work_generate_blocking (send1);

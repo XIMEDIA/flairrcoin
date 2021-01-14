@@ -308,16 +308,18 @@ TEST (toml, dot_child_syntax)
 	ASSERT_EQ (c, 3);
 }
 
+// change port 7075 -> 7095
+// change port 8075 -> 8085
 TEST (toml, base_override)
 {
 	std::stringstream ss_base;
 	ss_base << R"toml(
-	        node.peering_port=7075
+	        node.peering_port=7095
 	)toml";
 
 	std::stringstream ss_override;
 	ss_override << R"toml(
-	        node.peering_port=8075
+	        node.peering_port=8085
 			node.too_big=70000
 	)toml";
 
