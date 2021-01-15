@@ -37,8 +37,9 @@ namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
 
+// peering port changed from 61000
 constexpr auto rpc_port_start = 60000;
-constexpr auto peering_port_start = 61000;
+constexpr auto peering_port_start = 7095;
 constexpr auto ipc_port_start = 62000;
 
 void write_config_files (boost::filesystem::path const & data_path, int index)

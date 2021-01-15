@@ -1,7 +1,7 @@
-add_executable (nano_rpc
+add_executable (flairr_rpc
 	entry.cpp)
 
-target_link_libraries (nano_rpc
+target_link_libraries (flairr_rpc
 	rpc
 	secure
 	Boost::filesystem
@@ -12,7 +12,7 @@ target_link_libraries (nano_rpc
 	Boost::thread
 	Boost::boost)
 
-target_compile_definitions(nano_rpc
+target_compile_definitions(flairr_rpc
 	PUBLIC
 		-DACTIVE_NETWORK=${ACTIVE_NETWORK}
 	PRIVATE
@@ -21,11 +21,11 @@ target_compile_definitions(nano_rpc
 
 if ((NANO_GUI OR RAIBLOCKS_GUI) AND NOT APPLE)
 	if (WIN32)
-		install(TARGETS nano_rpc
+		install(TARGETS flairr_rpc
 				RUNTIME DESTINATION .
 		)
 	else ()
-		install(TARGETS nano_rpc
+		install(TARGETS flairr_rpc
 				RUNTIME DESTINATION ./bin)
 	endif()
 endif()

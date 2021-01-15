@@ -10,7 +10,7 @@ using uint512_t = boost::multiprecision::uint512_t;
 // SI dividers
 // (g, m, or k)FLR_ratio changed from (G, M, or k)xrb_ratio
 nano::uint128_t const gFLR_ratio = nano::uint128_t ("1000000000000000000000000000000000"); // 10^33
-nano::uint128_t const mFLRratio = nano::uint128_t ("1000000000000000000000000000000"); // 10^30
+nano::uint128_t const mFLR_ratio = nano::uint128_t ("1000000000000000000000000000000"); // 10^30
 nano::uint128_t const kFLR_ratio = nano::uint128_t ("1000000000000000000000000000"); // 10^27
 nano::uint128_t const FLR_ratio = nano::uint128_t ("1000000000000000000000000"); // 10^24
 nano::uint128_t const raw_ratio = nano::uint128_t ("1"); // 10^0

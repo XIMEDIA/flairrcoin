@@ -66,6 +66,7 @@ int main (int argc, char * const * argv)
 	nano::node_singleton_memory_pool_purge_guard memory_pool_cleanup_guard;
 	boost::program_options::options_description description ("Command line options");
 	// clang-format off
+	// nano_node_backtrace changed to flairr_node_backtrace
 	description.add_options ()
 		("help", "Print out options")
 		("version", "Prints out version")
@@ -82,8 +83,8 @@ int main (int argc, char * const * argv)
 		("debug_profile_validate", "Profile work validation")
 		("debug_opencl", "OpenCL work generation")
 		("debug_profile_kdf", "Profile kdf function")
-		("debug_output_last_backtrace_dump", "Displays the contents of the latest backtrace in the event of a nano_node crash")
-		("debug_generate_crash_report", "Consolidates the nano_node_backtrace.dump file. Requires addr2line installed on Linux")
+		("debug_output_last_backtrace_dump", "Displays the contents of the latest backtrace in the event of a flairr_node crash")
+		("debug_generate_crash_report", "Consolidates the flairr_node_backtrace.dump file. Requires addr2line installed on Linux")
 		("debug_sys_logging", "Test the system logger")
 		("debug_verify_profile", "Profile signature verification")
 		("debug_verify_profile_batch", "Profile batch signature verification")
@@ -661,10 +662,10 @@ int main (int argc, char * const * argv)
 		}
 		else if (vm.count ("debug_output_last_backtrace_dump"))
 		{
-			if (boost::filesystem::exists ("nano_node_backtrace.dump"))
+			if (boost::filesystem::exists ("flairr_node_backtrace.dump"))
 			{
 				// There is a backtrace, so output the contents
-				std::ifstream ifs ("nano_node_backtrace.dump");
+				std::ifstream ifs ("flairr_node_backtrace.dump");
 
 				boost::stacktrace::stacktrace st = boost::stacktrace::stacktrace::from_dump (ifs);
 				std::cout << "Latest crash backtrace:\n"
@@ -673,13 +674,15 @@ int main (int argc, char * const * argv)
 		}
 		else if (vm.count ("debug_generate_crash_report"))
 		{
-			if (boost::filesystem::exists ("nano_node_backtrace.dump"))
+			// nano_node_backtrace changed to flairr_node_backtrace
+			if (boost::filesystem::exists ("flairr_node_backtrace.dump"))
 			{
 				// There is a backtrace, so output the contents
-				std::ifstream ifs ("nano_node_backtrace.dump");
+				// nano_node_backtrace changed to flairr_node_backtrace
+				std::ifstream ifs ("flairr_node_backtrace.dump");
 				boost::stacktrace::stacktrace st = boost::stacktrace::stacktrace::from_dump (ifs);
-
-				std::string crash_report_filename = "nano_node_crash_report.txt";
+				// nano_node_crash_report changed to flairr_node_crash_report
+				std::string crash_report_filename = "flairr_node_crash_report.txt";
 
 #if defined(_WIN32) || defined(__APPLE__)
 				// Only linux has load addresses, so just write the dump to a readable file.
@@ -693,7 +696,8 @@ int main (int argc, char * const * argv)
 				if (!err)
 				{
 					auto num = 0;
-					auto format = boost::format ("nano_node_crash_load_address_dump_%1%.txt");
+					// nano_node_crash_load_address_dump_ changed to flairr_node_crash_load_address_dump_
+					auto format = boost::format ("flairr_node_crash_load_address_dump_%1%.txt");
 					std::vector<address_library_pair> base_addresses;
 
 					// The first one only has the load address
@@ -825,12 +829,12 @@ int main (int argc, char * const * argv)
 						    << "Using relative addresses:" << std::endl; // Add an empty line to separate the absolute & relative output
 					}
 
-					// Now run using relative addresses. This will give actual results for other dlls, the results from the nano_node executable.
+					// Now run using relative addresses. This will give actual results for other dlls, the results from the flairr_node executable.
 					run_addr2line (true);
 
 					if (std::find (system_codes.begin (), system_codes.end (), 0) == system_codes.end ())
 					{
-						std::cerr << "Error: Check that addr2line is installed and that nano_node_crash_load_address_dump_*.txt files exist." << std::endl;
+						std::cerr << "Error: Check that addr2line is installed and that flairr_node_crash_load_address_dump_*.txt files exist." << std::endl;
 						result = -1;
 					}
 					else
@@ -842,8 +846,8 @@ int main (int argc, char * const * argv)
 							boost::filesystem::remove (boost::str (format % num));
 							++num;
 						}
-
-						boost::filesystem::remove ("nano_node_backtrace.dump");
+						// nano_node_backtrace changed to flairr_node_backtrace
+						boost::filesystem::remove ("flairr_node_backtrace.dump");
 					}
 				}
 				else
@@ -855,7 +859,8 @@ int main (int argc, char * const * argv)
 			}
 			else
 			{
-				std::cerr << "Error: nano_node_backtrace.dump could not be found";
+				// nano_node_backtrace changed to flairr_node_backtrace
+				std::cerr << "Error: flairr_node_backtrace.dump could not be found";
 				result = -1;
 			}
 		}
@@ -1334,7 +1339,7 @@ int main (int argc, char * const * argv)
 			 *
 			 * Example, running the entire dieharder test suite:
 			 *
-			 *   ./nano_node --debug_random_feed | dieharder -a -g 200
+			 *   ./flairr_node --debug_random_feed | dieharder -a -g 200
 			 */
 			nano::raw_key seed;
 			for (;;)
