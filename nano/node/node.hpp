@@ -183,7 +183,7 @@ public:
 	std::thread block_processor_thread;
 	nano::block_arrival block_arrival;
 	nano::online_reps online_reps;
-	nano::local_vote_history history;
+	nano::votes_cache votes_cache;
 	nano::keypair node_id;
 	nano::block_uniquer block_uniquer;
 	nano::vote_uniquer vote_uniquer;
@@ -220,7 +220,7 @@ nano::node_flags const & inactive_node_flag_defaults ();
 class inactive_node final
 {
 public:
-	inactive_node (boost::filesystem::path const & path_a, nano::node_flags const & node_flags_a);
+	inactive_node (boost::filesystem::path const & path_a, nano::node_flags const & node_flags_a = nano::inactive_node_flag_defaults ());
 	~inactive_node ();
 	std::shared_ptr<boost::asio::io_context> io_context;
 	nano::alarm alarm;

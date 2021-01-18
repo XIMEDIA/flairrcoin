@@ -12,54 +12,34 @@ boost::filesystem::path nano::working_path (bool legacy)
 	auto result (nano::app_path ());
 	switch (network_constants.network ())
 	{
-		// NanoDev changed to FlairrcoinDev
-		case nano::nano_networks::nano_dev_network:
-			if (!legacy)
-			{
-				result /= "FlairrcoinDev";
-			}
-			// RaiBlocksDev changed to FcDev
-			else
-			{
-				result /= "FcDev";
-			}
-			break;
-		// Possible new variables
-		case nano::nano_networks::nano_beta_network:
-			if (!legacy)
-			{
-				// FlairrcoinBeta changed from NanoBeta
-				result /= "FlairrcoinBeta";
-			}
-			else
-			{
-				// FcBeta changed from RaiBlocksBeta
-				result /= "FcBeta";
-			}
-			break;
-		// Nano changed to FlairrcoinData
-		case nano::nano_networks::nano_live_network:
-			if (!legacy)
-			{
-				result /= "FlairrcoinData";
-			}
-			// RaiBlocks changed to Flairrcoin
-			else
-			{
-				result /= "Flairrcoin";
-			}
-			break;
-		// Possible new variables
 		case nano::nano_networks::nano_test_network:
 			if (!legacy)
 			{
-				// FlairrcoinTest changed from NanoTest
-				result /= "FlairrcoinTest";
+				result /= "NanoTest";
 			}
 			else
 			{
-				// FcTest changed from RaiBlocksTest
-				result /= "FcTest";
+				result /= "RaiBlocksTest";
+			}
+			break;
+		case nano::nano_networks::nano_beta_network:
+			if (!legacy)
+			{
+				result /= "NanoBeta";
+			}
+			else
+			{
+				result /= "RaiBlocksBeta";
+			}
+			break;
+		case nano::nano_networks::nano_live_network:
+			if (!legacy)
+			{
+				result /= "Nano";
+			}
+			else
+			{
+				result /= "RaiBlocks";
 			}
 			break;
 	}

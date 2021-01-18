@@ -9,7 +9,6 @@
 
 // Some builds (mac) fail due to "Boost.Stacktrace requires `_Unwind_Backtrace` function".
 #ifndef _WIN32
-// Does this get changed? NANO_
 #ifdef NANO_STACKTRACE_BACKTRACE
 #define BOOST_STACKTRACE_USE_BACKTRACE
 #endif
@@ -71,8 +70,7 @@ const nano::container_info & nano::container_info_leaf::get_info () const
 
 void nano::dump_crash_stacktrace ()
 {
-	// nano_node_backtrace changed to flairr_node_backtrace
-	boost::stacktrace::safe_dump_to ("flairr_node_backtrace.dump");
+	boost::stacktrace::safe_dump_to ("nano_node_backtrace.dump");
 }
 
 std::string nano::generate_stacktrace ()
@@ -127,9 +125,7 @@ void assert_internal (const char * check_expr, const char * func, const char * f
 		// Try construct the stacktrace dump in the same folder as the the running executable, otherwise use the current directory.
 		boost::system::error_code err;
 		auto running_executable_filepath = boost::dll::program_location (err);
-		// nano_node_backtrace_release_assert changed to flairr_node_backtrace_release_assert
-		// nano_node_backtrace_assert changed to flairr_node_backtrace_assert
-		std::string filename = is_release_assert ? "flairr_node_backtrace_release_assert.txt" : "flairr_node_backtrace_assert.txt";
+		std::string filename = is_release_assert ? "nano_node_backtrace_release_assert.txt" : "nano_node_backtrace_assert.txt";
 		std::string filepath = filename;
 		if (!err)
 		{

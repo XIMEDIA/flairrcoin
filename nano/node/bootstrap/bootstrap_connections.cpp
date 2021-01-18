@@ -30,11 +30,10 @@ nano::bootstrap_client::~bootstrap_client ()
 	--connections->connections_count;
 }
 
-double nano::bootstrap_client::sample_block_rate ()
+double nano::bootstrap_client::block_rate () const
 {
 	auto elapsed = std::max (elapsed_seconds (), nano::bootstrap_limits::bootstrap_minimum_elapsed_seconds_blockrate);
-	block_rate = static_cast<double> (block_count.load ()) / elapsed;
-	return block_rate;
+	return static_cast<double> (block_count.load () / elapsed);
 }
 
 void nano::bootstrap_client::set_start_time (std::chrono::steady_clock::time_point start_time_a)
@@ -202,7 +201,7 @@ struct block_rate_cmp
 {
 	bool operator() (const std::shared_ptr<nano::bootstrap_client> & lhs, const std::shared_ptr<nano::bootstrap_client> & rhs) const
 	{
-		return lhs->block_rate > rhs->block_rate;
+		return lhs->block_rate () > rhs->block_rate ();
 	}
 };
 
@@ -226,7 +225,7 @@ void nano::bootstrap_connections::populate_connections (bool repeat)
 					new_clients.push_back (client);
 					endpoints.insert (socket_l->remote_endpoint ());
 					double elapsed_sec = client->elapsed_seconds ();
-					auto blocks_per_sec = client->sample_block_rate ();
+					auto blocks_per_sec = client->block_rate ();
 					rate_sum += blocks_per_sec;
 					if (client->elapsed_seconds () > nano::bootstrap_limits::bootstrap_connection_warmup_time_sec && client->block_count > 0)
 					{
@@ -271,7 +270,7 @@ void nano::bootstrap_connections::populate_connections (bool repeat)
 
 			if (node.config.logging.bulk_pull_logging ())
 			{
-				node.logger.try_log (boost::str (boost::format ("Dropping peer with block rate %1%, block count %2% (%3%) ") % client->block_rate % client->block_count % client->channel->to_string ()));
+				node.logger.try_log (boost::str (boost::format ("Dropping peer with block rate %1%, block count %2% (%3%) ") % client->block_rate () % client->block_count % client->channel->to_string ()));
 			}
 
 			client->stop (false);

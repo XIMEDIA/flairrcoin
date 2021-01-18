@@ -283,6 +283,8 @@ public:
 		// udp
 		blocking,
 		overflow,
+		invalid_magic,
+		invalid_network,
 		invalid_header,
 		invalid_message_type,
 		invalid_keepalive_message,

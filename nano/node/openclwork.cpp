@@ -11,8 +11,6 @@
 #include <string>
 #include <vector>
 
-bool nano::opencl_loaded{ false };
-
 namespace
 {
 std::string opencl_program = R"%%%(
@@ -27,13 +25,10 @@ enum Blake2b_IV {
     iv7 = 0x5be0cd19137e2179UL,
 };
 
-// nano_xor_iv0 change to flairr_xor_iv0
-// nano_xor_iv4 change to flairr_xor_iv4
-// nano_xor_iv6 change to flairr_xor_iv6
 enum IV_Derived {
-    flairr_xor_iv0 = 0x6a09e667f2bdc900UL,  // iv1 ^ 0x1010000 ^ outlen
-    flairr_xor_iv4 = 0x510e527fade682f9UL,  // iv4 ^ inbytes
-    flairr_xor_iv6 = 0xe07c265404be4294UL,  // iv6 ^ ~0
+    nano_xor_iv0 = 0x6a09e667f2bdc900UL,  // iv1 ^ 0x1010000 ^ outlen
+    nano_xor_iv4 = 0x510e527fade682f9UL,  // iv4 ^ inbytes
+    nano_xor_iv6 = 0xe07c265404be4294UL,  // iv6 ^ ~0
 };
 
 #ifdef cl_amd_media_ops
@@ -85,15 +80,13 @@ static inline ulong rotr64(ulong x, int shift)
         G2v_split(m12, m13, m14, m15, 2, vv[7 / 2].s1, vv[4 / 2].s0, 8,        \
                   vv[13 / 2].s1, vv[14 / 2].s0);                               \
     } while (0)
-// nano_xor_iv0 change to flairr_xor_iv0
-// nano_xor_iv4 change to flairr_xor_iv4
-// nano_xor_iv6 change to flairr_xor_iv6
+
 static inline ulong blake2b(ulong const nonce, __constant ulong *h)
 {
     ulong2 vv[8] = {
-        {flairr_xor_iv0, iv1}, {iv2, iv3},          {iv4, iv5},
+        {nano_xor_iv0, iv1}, {iv2, iv3},          {iv4, iv5},
         {iv6, iv7},          {iv0, iv1},          {iv2, iv3},
-        {flairr_xor_iv4, iv5}, {flairr_xor_iv6, iv7},
+        {nano_xor_iv4, iv5}, {nano_xor_iv6, iv7},
     };
 
     ROUND(nonce, h[0], h[1], h[2], h[3], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -109,8 +102,7 @@ static inline ulong blake2b(ulong const nonce, __constant ulong *h)
     ROUND(nonce, h[0], h[1], h[2], h[3], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     ROUND(0, 0, h[3], 0, 0, 0, 0, 0, h[0], 0, nonce, h[1], 0, 0, 0, h[2]);
 
-// nano_xor_iv0 change to flairr_xor_iv0
-    return flairr_xor_iv0 ^ vv[0].s0 ^ vv[4].s0;
+    return nano_xor_iv0 ^ vv[0].s0 ^ vv[4].s0;
 }
 #undef G32
 #undef G2v
@@ -131,124 +123,110 @@ __kernel void nano_work(__constant ulong *attempt,
 
 nano::opencl_environment::opencl_environment (bool & error_a)
 {
-	if (nano::opencl_loaded)
+	cl_uint platformIdCount = 0;
+	clGetPlatformIDs (0, nullptr, &platformIdCount);
+	std::vector<cl_platform_id> platformIds (platformIdCount);
+	clGetPlatformIDs (platformIdCount, platformIds.data (), nullptr);
+	for (auto i (platformIds.begin ()), n (platformIds.end ()); i != n; ++i)
 	{
-		cl_uint platformIdCount = 0;
-		clGetPlatformIDs (0, nullptr, &platformIdCount);
-		std::vector<cl_platform_id> platformIds (platformIdCount);
-		clGetPlatformIDs (platformIdCount, platformIds.data (), nullptr);
-		for (auto i (platformIds.begin ()), n (platformIds.end ()); i != n; ++i)
+		nano::opencl_platform platform;
+		platform.platform = *i;
+		cl_uint deviceIdCount = 0;
+		clGetDeviceIDs (*i, CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceIdCount);
+		std::vector<cl_device_id> deviceIds (deviceIdCount);
+		clGetDeviceIDs (*i, CL_DEVICE_TYPE_ALL, deviceIdCount, deviceIds.data (), nullptr);
+		for (auto j (deviceIds.begin ()), m (deviceIds.end ()); j != m; ++j)
 		{
-			nano::opencl_platform platform;
-			platform.platform = *i;
-			cl_uint deviceIdCount = 0;
-			clGetDeviceIDs (*i, CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceIdCount);
-			std::vector<cl_device_id> deviceIds (deviceIdCount);
-			clGetDeviceIDs (*i, CL_DEVICE_TYPE_ALL, deviceIdCount, deviceIds.data (), nullptr);
-			for (auto j (deviceIds.begin ()), m (deviceIds.end ()); j != m; ++j)
-			{
-				platform.devices.push_back (*j);
-			}
-			platforms.push_back (platform);
+			platform.devices.push_back (*j);
 		}
-	}
-	else
-	{
-		error_a = true;
+		platforms.push_back (platform);
 	}
 }
 
 void nano::opencl_environment::dump (std::ostream & stream)
 {
-	if (nano::opencl_loaded)
+	auto index (0);
+	size_t device_count (0);
+	for (auto & i : platforms)
 	{
-		auto index (0);
-		size_t device_count (0);
-		for (auto & i : platforms)
+		device_count += i.devices.size ();
+	}
+	stream << boost::str (boost::format ("OpenCL found %1% platforms and %2% devices\n") % platforms.size () % device_count);
+	for (auto i (platforms.begin ()), n (platforms.end ()); i != n; ++i, ++index)
+	{
+		std::vector<unsigned> queries = { CL_PLATFORM_PROFILE, CL_PLATFORM_VERSION, CL_PLATFORM_NAME, CL_PLATFORM_VENDOR, CL_PLATFORM_EXTENSIONS };
+		stream << "Platform: " << index << std::endl;
+		for (auto j (queries.begin ()), m (queries.end ()); j != m; ++j)
 		{
-			device_count += i.devices.size ();
+			size_t platformInfoCount = 0;
+			clGetPlatformInfo (i->platform, *j, 0, nullptr, &platformInfoCount);
+			std::vector<char> info (platformInfoCount);
+			clGetPlatformInfo (i->platform, *j, info.size (), info.data (), nullptr);
+			stream << info.data () << std::endl;
 		}
-		stream << boost::str (boost::format ("OpenCL found %1% platforms and %2% devices\n") % platforms.size () % device_count);
-		for (auto i (platforms.begin ()), n (platforms.end ()); i != n; ++i, ++index)
+		for (auto j (i->devices.begin ()), m (i->devices.end ()); j != m; ++j)
 		{
-			std::vector<unsigned> queries = { CL_PLATFORM_PROFILE, CL_PLATFORM_VERSION, CL_PLATFORM_NAME, CL_PLATFORM_VENDOR, CL_PLATFORM_EXTENSIONS };
-			stream << "Platform: " << index << std::endl;
-			for (auto j (queries.begin ()), m (queries.end ()); j != m; ++j)
+			std::vector<unsigned> queries = { CL_DEVICE_NAME, CL_DEVICE_VENDOR, CL_DEVICE_PROFILE };
+			stream << "Device: " << j - i->devices.begin () << std::endl;
+			for (auto k (queries.begin ()), o (queries.end ()); k != o; ++k)
 			{
 				size_t platformInfoCount = 0;
-				clGetPlatformInfo (i->platform, *j, 0, nullptr, &platformInfoCount);
+				clGetDeviceInfo (*j, *k, 0, nullptr, &platformInfoCount);
 				std::vector<char> info (platformInfoCount);
-				clGetPlatformInfo (i->platform, *j, info.size (), info.data (), nullptr);
-				stream << info.data () << std::endl;
+				clGetDeviceInfo (*j, *k, info.size (), info.data (), nullptr);
+				stream << '\t' << info.data () << std::endl;
 			}
-			for (auto j (i->devices.begin ()), m (i->devices.end ()); j != m; ++j)
+			size_t deviceTypeCount = 0;
+			clGetDeviceInfo (*j, CL_DEVICE_TYPE, 0, nullptr, &deviceTypeCount);
+			std::vector<uint8_t> deviceTypeInfo (deviceTypeCount);
+			clGetDeviceInfo (*j, CL_DEVICE_TYPE, deviceTypeCount, deviceTypeInfo.data (), 0);
+			std::string device_type_string;
+			switch (deviceTypeInfo[0])
 			{
-				std::vector<unsigned> queries = { CL_DEVICE_NAME, CL_DEVICE_VENDOR, CL_DEVICE_PROFILE };
-				stream << "Device: " << j - i->devices.begin () << std::endl;
-				for (auto k (queries.begin ()), o (queries.end ()); k != o; ++k)
-				{
-					size_t platformInfoCount = 0;
-					clGetDeviceInfo (*j, *k, 0, nullptr, &platformInfoCount);
-					std::vector<char> info (platformInfoCount);
-					clGetDeviceInfo (*j, *k, info.size (), info.data (), nullptr);
-					stream << '\t' << info.data () << std::endl;
-				}
-				size_t deviceTypeCount = 0;
-				clGetDeviceInfo (*j, CL_DEVICE_TYPE, 0, nullptr, &deviceTypeCount);
-				std::vector<uint8_t> deviceTypeInfo (deviceTypeCount);
-				clGetDeviceInfo (*j, CL_DEVICE_TYPE, deviceTypeCount, deviceTypeInfo.data (), 0);
-				std::string device_type_string;
-				switch (deviceTypeInfo[0])
-				{
-					case CL_DEVICE_TYPE_ACCELERATOR:
-						device_type_string = "ACCELERATOR";
-						break;
-					case CL_DEVICE_TYPE_CPU:
-						device_type_string = "CPU";
-						break;
-					case CL_DEVICE_TYPE_CUSTOM:
-						device_type_string = "CUSTOM";
-						break;
-					case CL_DEVICE_TYPE_DEFAULT:
-						device_type_string = "DEFAULT";
-						break;
-					case CL_DEVICE_TYPE_GPU:
-						device_type_string = "GPU";
-						break;
-					default:
-						device_type_string = "Unknown";
-						break;
-				}
-				stream << '\t' << device_type_string << std::endl;
-				size_t compilerAvailableCount = 0;
-				clGetDeviceInfo (*j, CL_DEVICE_COMPILER_AVAILABLE, 0, nullptr, &compilerAvailableCount);
-				std::vector<uint8_t> compilerAvailableInfo (compilerAvailableCount);
-				clGetDeviceInfo (*j, CL_DEVICE_COMPILER_AVAILABLE, compilerAvailableCount, compilerAvailableInfo.data (), 0);
-				stream << "\tCompiler available: " << (compilerAvailableInfo[0] ? "true" : "false") << std::endl;
-				size_t computeUnitsAvailableCount = 0;
-				clGetDeviceInfo (*j, CL_DEVICE_MAX_COMPUTE_UNITS, 0, nullptr, &computeUnitsAvailableCount);
-				std::vector<uint8_t> computeUnitsAvailableInfo (computeUnitsAvailableCount);
-				clGetDeviceInfo (*j, CL_DEVICE_MAX_COMPUTE_UNITS, computeUnitsAvailableCount, computeUnitsAvailableInfo.data (), 0);
-				uint64_t computeUnits (computeUnitsAvailableInfo[0] | (computeUnitsAvailableInfo[1] << 8) | (computeUnitsAvailableInfo[2] << 16) | (computeUnitsAvailableInfo[3] << 24));
-				stream << "\tCompute units available: " << computeUnits << std::endl;
-				cl_ulong size{ 0 };
-				clGetDeviceInfo (*j, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof (cl_ulong), &size, 0);
-				stream << "\tMemory size" << std::endl;
-				stream << "\t\tConstant buffer: " << size << std::endl;
-				clGetDeviceInfo (*j, CL_DEVICE_LOCAL_MEM_SIZE, sizeof (cl_ulong), &size, 0);
-				stream << "\t\tLocal memory   : " << size << std::endl;
-				clGetDeviceInfo (*j, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof (cl_ulong), &size, 0);
-				stream << "\t\tGlobal memory  : " << size << std::endl;
-				clGetDeviceInfo (*j, CL_DEVICE_GLOBAL_MEM_CACHE_SIZE, sizeof (cl_ulong), &size, 0);
-				stream << "\t\tGlobal cache   : " << size << std::endl;
-				clGetDeviceInfo (*j, CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof (cl_ulong), &size, 0);
-				stream << "\t\tMax allocation : " << size << std::endl;
+				case CL_DEVICE_TYPE_ACCELERATOR:
+					device_type_string = "ACCELERATOR";
+					break;
+				case CL_DEVICE_TYPE_CPU:
+					device_type_string = "CPU";
+					break;
+				case CL_DEVICE_TYPE_CUSTOM:
+					device_type_string = "CUSTOM";
+					break;
+				case CL_DEVICE_TYPE_DEFAULT:
+					device_type_string = "DEFAULT";
+					break;
+				case CL_DEVICE_TYPE_GPU:
+					device_type_string = "GPU";
+					break;
+				default:
+					device_type_string = "Unknown";
+					break;
 			}
+			stream << '\t' << device_type_string << std::endl;
+			size_t compilerAvailableCount = 0;
+			clGetDeviceInfo (*j, CL_DEVICE_COMPILER_AVAILABLE, 0, nullptr, &compilerAvailableCount);
+			std::vector<uint8_t> compilerAvailableInfo (compilerAvailableCount);
+			clGetDeviceInfo (*j, CL_DEVICE_COMPILER_AVAILABLE, compilerAvailableCount, compilerAvailableInfo.data (), 0);
+			stream << "\tCompiler available: " << (compilerAvailableInfo[0] ? "true" : "false") << std::endl;
+			size_t computeUnitsAvailableCount = 0;
+			clGetDeviceInfo (*j, CL_DEVICE_MAX_COMPUTE_UNITS, 0, nullptr, &computeUnitsAvailableCount);
+			std::vector<uint8_t> computeUnitsAvailableInfo (computeUnitsAvailableCount);
+			clGetDeviceInfo (*j, CL_DEVICE_MAX_COMPUTE_UNITS, computeUnitsAvailableCount, computeUnitsAvailableInfo.data (), 0);
+			uint64_t computeUnits (computeUnitsAvailableInfo[0] | (computeUnitsAvailableInfo[1] << 8) | (computeUnitsAvailableInfo[2] << 16) | (computeUnitsAvailableInfo[3] << 24));
+			stream << "\tCompute units available: " << computeUnits << std::endl;
+			cl_ulong size{ 0 };
+			clGetDeviceInfo (*j, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof (cl_ulong), &size, 0);
+			stream << "\tMemory size" << std::endl;
+			stream << "\t\tConstant buffer: " << size << std::endl;
+			clGetDeviceInfo (*j, CL_DEVICE_LOCAL_MEM_SIZE, sizeof (cl_ulong), &size, 0);
+			stream << "\t\tLocal memory   : " << size << std::endl;
+			clGetDeviceInfo (*j, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof (cl_ulong), &size, 0);
+			stream << "\t\tGlobal memory  : " << size << std::endl;
+			clGetDeviceInfo (*j, CL_DEVICE_GLOBAL_MEM_CACHE_SIZE, sizeof (cl_ulong), &size, 0);
+			stream << "\t\tGlobal cache   : " << size << std::endl;
+			clGetDeviceInfo (*j, CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof (cl_ulong), &size, 0);
+			stream << "\t\tMax allocation : " << size << std::endl;
 		}
-	}
-	else
-	{
-		stream << boost::str (boost::format ("OpenCL library could not be found\n"));
 	}
 }
 
@@ -290,23 +268,23 @@ logger (logger_a)
 				if (!error_a)
 				{
 					cl_int attempt_error (0);
-					attempt_buffer = clCreateBuffer (context, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, sizeof (uint64_t), nullptr, &attempt_error);
+					attempt_buffer = clCreateBuffer (context, 0, sizeof (uint64_t), nullptr, &attempt_error);
 					error_a |= attempt_error != CL_SUCCESS;
 					if (!error_a)
 					{
 						cl_int result_error (0);
-						result_buffer = clCreateBuffer (context, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, sizeof (uint64_t), nullptr, &result_error);
+						result_buffer = clCreateBuffer (context, 0, sizeof (uint64_t), nullptr, &result_error);
 						error_a |= result_error != CL_SUCCESS;
 						if (!error_a)
 						{
 							cl_int item_error (0);
 							size_t item_size (sizeof (nano::uint256_union));
-							item_buffer = clCreateBuffer (context, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, item_size, nullptr, &item_error);
+							item_buffer = clCreateBuffer (context, 0, item_size, nullptr, &item_error);
 							error_a |= item_error != CL_SUCCESS;
 							if (!error_a)
 							{
 								cl_int difficulty_error (0);
-								difficulty_buffer = clCreateBuffer (context, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, sizeof (uint64_t), nullptr, &difficulty_error);
+								difficulty_buffer = clCreateBuffer (context, 0, sizeof (uint64_t), nullptr, &difficulty_error);
 								error_a |= difficulty_error != CL_SUCCESS;
 								if (!error_a)
 								{

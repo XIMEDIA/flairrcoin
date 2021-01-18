@@ -13,7 +13,7 @@ int constexpr nano::election::confirmed_duration_factor;
 
 std::chrono::milliseconds nano::election::base_latency () const
 {
-	return node.network_params.network.is_dev_network () ? 25ms : 1000ms;
+	return node.network_params.network.is_test_network () ? 25ms : 1000ms;
 }
 
 nano::election_vote_result::election_vote_result (bool replay_a, bool processed_a)
@@ -28,8 +28,7 @@ prioritized_m (prioritized_a),
 election_behavior (election_behavior_a),
 node (node_a),
 status ({ block_a, 0, std::chrono::duration_cast<std::chrono::milliseconds> (std::chrono::system_clock::now ().time_since_epoch ()), std::chrono::duration_values<std::chrono::milliseconds>::zero (), 0, 1, 0, nano::election_status_type::ongoing }),
-height (block_a->sideband ().height),
-root (block_a->root ())
+height (block_a->sideband ().height)
 {
 	last_votes.emplace (node.network_params.random.not_an_account, nano::vote_info{ std::chrono::steady_clock::now (), 0, block_a->hash () });
 	blocks.emplace (block_a->hash (), block_a);
@@ -219,7 +218,7 @@ bool nano::election::transition_time (nano::confirmation_solicitor & solicitor_a
 			debug_assert (false);
 			break;
 	}
-	auto optimistic_expiration_time = node.network_params.network.is_dev_network () ? 500 : 60 * 1000;
+	auto optimistic_expiration_time = node.network_params.network.is_test_network () ? 500 : 60 * 1000;
 	auto expire_time = std::chrono::milliseconds (optimistic () ? optimistic_expiration_time : 5 * 60 * 1000);
 	if (!confirmed () && expire_time < std::chrono::steady_clock::now () - election_start)
 	{
@@ -302,7 +301,7 @@ void nano::election::log_votes (nano::tally_t const & tally_a, std::string const
 {
 	std::stringstream tally;
 	std::string line_end (node.config.logging.single_line_record () ? "\t" : "\n");
-	tally << boost::str (boost::format ("%1%%2%Vote tally for root %3%") % prefix_a % line_end % root.to_string ());
+	tally << boost::str (boost::format ("%1%%2%Vote tally for root %3%") % prefix_a % line_end % status.winner->root ().to_string ());
 	for (auto i (tally_a.begin ()), n (tally_a.end ()); i != n; ++i)
 	{
 		tally << boost::str (boost::format ("%1%Block %2% weight %3%") % line_end % i->second->hash ().to_string () % i->first.convert_to<std::string> ());
@@ -324,7 +323,7 @@ nano::election_vote_result nano::election::vote (nano::account rep, uint64_t seq
 	auto online_stake (node.online_reps.online_stake ());
 	auto weight (node.ledger.weight (rep));
 	auto should_process (false);
-	if (node.network_params.network.is_dev_network () || weight > node.minimum_principal_weight (online_stake))
+	if (node.network_params.network.is_test_network () || weight > node.minimum_principal_weight (online_stake))
 	{
 		unsigned int cooldown;
 		if (weight < online_stake / 100) // 0.1% to 1%
@@ -486,7 +485,7 @@ void nano::election::prioritize_election (nano::vote_generator_session & generat
 	debug_assert (!node.active.mutex.try_lock ());
 	debug_assert (!prioritized_m);
 	prioritized_m = true;
-	generator_session_a.add (root, status.winner->hash ());
+	generator_session_a.add (status.winner->hash ());
 }
 
 void nano::election::generate_votes ()
@@ -494,7 +493,7 @@ void nano::election::generate_votes ()
 	debug_assert (!node.active.mutex.try_lock ());
 	if (node.config.enable_voting && node.wallets.reps ().voting > 0)
 	{
-		node.active.generator.add (root, status.winner->hash ());
+		node.active.generator.add (status.winner->hash ());
 	}
 }
 
@@ -503,12 +502,12 @@ void nano::election::remove_votes (nano::block_hash const & hash_a)
 	if (node.config.enable_voting && node.wallets.reps ().voting > 0)
 	{
 		// Remove votes from election
-		auto list_generated_votes (node.history.votes (root, hash_a));
+		auto list_generated_votes (node.votes_cache.find (hash_a));
 		for (auto const & vote : list_generated_votes)
 		{
 			last_votes.erase (vote->account);
 		}
 		// Clear votes cache
-		node.history.erase (root);
+		node.votes_cache.remove (hash_a);
 	}
 }

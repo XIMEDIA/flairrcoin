@@ -7,7 +7,6 @@
 #include <boost/endian/conversion.hpp>
 #include <boost/format.hpp>
 #include <boost/polymorphic_cast.hpp>
-#include <boost/property_tree/ptree.hpp>
 
 #include <rocksdb/merge_operator.h>
 #include <rocksdb/slice.h>
@@ -63,9 +62,19 @@ rocksdb_config (rocksdb_config_a)
 	}
 }
 
+nano::rocksdb_store::~rocksdb_store ()
+{
+	for (auto handle : handles)
+	{
+		delete handle;
+	}
+
+	delete db;
+}
+
 void nano::rocksdb_store::open (bool & error_a, boost::filesystem::path const & path_a, bool open_read_only_a)
 {
-	std::initializer_list<const char *> names{ rocksdb::kDefaultColumnFamilyName.c_str (), "frontiers", "accounts", "blocks", "pending", "unchecked", "vote", "online_weight", "meta", "peers", "confirmation_height" };
+	std::initializer_list<const char *> names{ rocksdb::kDefaultColumnFamilyName.c_str (), "frontiers", "accounts", "send", "receive", "open", "change", "state_blocks", "pending", "representation", "unchecked", "vote", "online_weight", "meta", "peers", "cached_counts", "confirmation_height" };
 	std::vector<rocksdb::ColumnFamilyDescriptor> column_families;
 	for (const auto & cf_name : names)
 	{
@@ -75,26 +84,17 @@ void nano::rocksdb_store::open (bool & error_a, boost::filesystem::path const & 
 	auto options = get_db_options ();
 	rocksdb::Status s;
 
-	std::vector<rocksdb::ColumnFamilyHandle *> handles_l;
 	if (open_read_only_a)
 	{
-		rocksdb::DB * db_l;
-		s = rocksdb::DB::OpenForReadOnly (options, path_a.string (), column_families, &handles_l, &db_l);
-		db.reset (db_l);
+		s = rocksdb::DB::OpenForReadOnly (options, path_a.string (), column_families, &handles, &db);
 	}
 	else
 	{
-		s = rocksdb::OptimisticTransactionDB::Open (options, path_a.string (), column_families, &handles_l, &optimistic_db);
+		s = rocksdb::OptimisticTransactionDB::Open (options, path_a.string (), column_families, &handles, &optimistic_db);
 		if (optimistic_db)
 		{
-			db.reset (optimistic_db);
+			db = optimistic_db;
 		}
-	}
-
-	handles.resize (handles_l.size ());
-	for (auto i = 0; i < handles_l.size (); ++i)
-	{
-		handles[i].reset (handles_l[i]);
 	}
 
 	// Assign handles to supplied
@@ -134,7 +134,7 @@ nano::write_transaction nano::rocksdb_store::tx_begin_write (std::vector<nano::t
 
 nano::read_transaction nano::rocksdb_store::tx_begin_read ()
 {
-	return nano::read_transaction{ std::make_unique<nano::read_rocksdb_txn> (db.get ()) };
+	return nano::read_transaction{ std::make_unique<nano::read_rocksdb_txn> (db) };
 }
 
 std::string nano::rocksdb_store::vendor_get () const
@@ -146,11 +146,11 @@ rocksdb::ColumnFamilyHandle * nano::rocksdb_store::table_to_column_family (table
 {
 	auto & handles_l = handles;
 	auto get_handle = [&handles_l](const char * name) {
-		auto iter = std::find_if (handles_l.begin (), handles_l.end (), [name](auto & handle) {
+		auto iter = std::find_if (handles_l.begin (), handles_l.end (), [name](auto handle) {
 			return (handle->GetName () == name);
 		});
 		debug_assert (iter != handles_l.end ());
-		return (*iter).get ();
+		return *iter;
 	};
 
 	switch (table_a)
@@ -159,10 +159,22 @@ rocksdb::ColumnFamilyHandle * nano::rocksdb_store::table_to_column_family (table
 			return get_handle ("frontiers");
 		case tables::accounts:
 			return get_handle ("accounts");
-		case tables::blocks:
-			return get_handle ("blocks");
+		case tables::send_blocks:
+			return get_handle ("send");
+		case tables::receive_blocks:
+			return get_handle ("receive");
+		case tables::open_blocks:
+			return get_handle ("open");
+		case tables::change_blocks:
+			return get_handle ("change");
+		case tables::state_blocks:
+			return get_handle ("state_blocks");
 		case tables::pending:
 			return get_handle ("pending");
+		case tables::blocks_info:
+			debug_assert (false);
+		case tables::representation:
+			return get_handle ("representation");
 		case tables::unchecked:
 			return get_handle ("unchecked");
 		case tables::vote:
@@ -173,11 +185,13 @@ rocksdb::ColumnFamilyHandle * nano::rocksdb_store::table_to_column_family (table
 			return get_handle ("meta");
 		case tables::peers:
 			return get_handle ("peers");
+		case tables::cached_counts:
+			return get_handle ("cached_counts");
 		case tables::confirmation_height:
 			return get_handle ("confirmation_height");
 		default:
 			release_assert (false);
-			return get_handle ("");
+			return get_handle ("peers");
 	}
 }
 
@@ -192,7 +206,6 @@ bool nano::rocksdb_store::exists (nano::transaction const & transaction_a, table
 	else
 	{
 		rocksdb::ReadOptions options;
-		options.fill_cache = false;
 		status = tx (transaction_a)->Get (options, table_to_column_family (table_a), key_a, &slice);
 	}
 
@@ -204,7 +217,21 @@ int nano::rocksdb_store::del (nano::write_transaction const & transaction_a, tab
 	debug_assert (transaction_a.contains (table_a));
 	// RocksDB does not report not_found status, it is a pre-condition that the key exists
 	debug_assert (exists (transaction_a, table_a, key_a));
+
+	// Removing an entry so counts may need adjusting
+	if (is_caching_counts (table_a))
+	{
+		decrement (transaction_a, tables::cached_counts, rocksdb_val (rocksdb::Slice (table_to_column_family (table_a)->GetName ())), 1);
+	}
+
 	return tx (transaction_a)->Delete (table_to_column_family (table_a), key_a).code ();
+}
+
+bool nano::rocksdb_store::block_info_get (nano::transaction const &, nano::block_hash const &, nano::block_info &) const
+{
+	// Should not be called as the RocksDB backend does not use this table
+	debug_assert (false);
+	return true;
 }
 
 void nano::rocksdb_store::version_put (nano::write_transaction const & transaction_a, int version_a)
@@ -246,10 +273,63 @@ int nano::rocksdb_store::get (nano::transaction const & transaction_a, tables ta
 	return status.code ();
 }
 
+/** The column families which need to have their counts cached for later querying */
+bool nano::rocksdb_store::is_caching_counts (nano::tables table_a) const
+{
+	switch (table_a)
+	{
+		case tables::send_blocks:
+		case tables::receive_blocks:
+		case tables::open_blocks:
+		case tables::change_blocks:
+		case tables::state_blocks:
+			return true;
+		default:
+			return false;
+	}
+}
+
+int nano::rocksdb_store::increment (nano::write_transaction const & transaction_a, tables table_a, nano::rocksdb_val const & key_a, uint64_t amount_a)
+{
+	release_assert (transaction_a.contains (table_a));
+	uint64_t base;
+	nano::rocksdb_val value;
+	if (!success (get (transaction_a, table_a, key_a, value)))
+	{
+		base = 0;
+	}
+	else
+	{
+		base = static_cast<uint64_t> (value);
+	}
+
+	return put (transaction_a, table_a, key_a, nano::rocksdb_val (base + amount_a));
+}
+
+int nano::rocksdb_store::decrement (nano::write_transaction const & transaction_a, tables table_a, nano::rocksdb_val const & key_a, uint64_t amount_a)
+{
+	release_assert (transaction_a.contains (table_a));
+	nano::rocksdb_val value;
+	auto status = get (transaction_a, table_a, key_a, value);
+	release_assert (success (status));
+	auto base = static_cast<uint64_t> (value);
+	return put (transaction_a, table_a, key_a, nano::rocksdb_val (base - amount_a));
+}
+
 int nano::rocksdb_store::put (nano::write_transaction const & transaction_a, tables table_a, nano::rocksdb_val const & key_a, nano::rocksdb_val const & value_a)
 {
 	debug_assert (transaction_a.contains (table_a));
+
 	auto txn = tx (transaction_a);
+	if (is_caching_counts (table_a))
+	{
+		if (!exists (transaction_a, table_a, key_a))
+		{
+			// Adding a new entry so counts need adjusting
+			increment (transaction_a, tables::cached_counts, rocksdb_val (rocksdb::Slice (table_to_column_family (table_a)->GetName ())), 1);
+		}
+	}
+
 	return txn->Put (table_to_column_family (table_a), key_a, value_a).code ();
 }
 
@@ -268,9 +348,24 @@ int nano::rocksdb_store::status_code_not_found () const
 	return static_cast<int> (rocksdb::Status::Code::kNotFound);
 }
 
-uint64_t nano::rocksdb_store::count (nano::transaction const & transaction_a, tables table_a) const
+uint64_t nano::rocksdb_store::count (nano::transaction const & transaction_a, rocksdb::ColumnFamilyHandle * handle) const
 {
-	uint64_t sum = 0;
+	uint64_t count = 0;
+	nano::rocksdb_val val;
+	auto const & key = handle->GetName ();
+	auto status = get (transaction_a, tables::cached_counts, nano::rocksdb_val (key.size (), (void *)key.data ()), val);
+	if (success (status))
+	{
+		count = static_cast<uint64_t> (val);
+	}
+
+	release_assert (success (status) || not_found (status));
+	return count;
+}
+
+size_t nano::rocksdb_store::count (nano::transaction const & transaction_a, tables table_a) const
+{
+	size_t sum = 0;
 	// Some column families are small enough (except unchecked) that they can just be iterated, rather than doing extra io caching counts
 	if (table_a == tables::peers)
 	{
@@ -286,31 +381,27 @@ uint64_t nano::rocksdb_store::count (nano::transaction const & transaction_a, ta
 			++sum;
 		}
 	}
-	// This is only an estimation
+	// This should only be used during initialization as can be expensive during bootstrapping
 	else if (table_a == tables::unchecked)
 	{
-		db->GetIntProperty (table_to_column_family (table_a), "rocksdb.estimate-num-keys", &sum);
-	}
-	// These should only be used in tests to check database consistency
-	else if (table_a == tables::accounts)
-	{
-		debug_assert (network_constants ().is_dev_network ());
-		for (auto i (latest_begin (transaction_a)), n (latest_end ()); i != n; ++i)
+		for (auto i (unchecked_begin (transaction_a)), n (unchecked_end ()); i != n; ++i)
 		{
 			++sum;
 		}
 	}
-	else if (table_a == tables::blocks)
+	// This should only be used in tests
+	else if (table_a == tables::accounts)
 	{
-		for (auto i (blocks_begin (transaction_a)), n (blocks_end ()); i != n; ++i)
+		debug_assert (network_constants ().is_test_network ());
+		for (auto i (latest_begin (transaction_a)), n (latest_end ()); i != n; ++i)
 		{
 			++sum;
 		}
 	}
 	else
 	{
-		debug_assert (false);
-		db->GetIntProperty (table_to_column_family (table_a), "rocksdb.estimate-num-keys", &sum);
+		debug_assert (is_caching_counts (table_a));
+		return count (transaction_a, table_to_column_family (table_a));
 	}
 
 	return sum;
@@ -322,6 +413,12 @@ int nano::rocksdb_store::drop (nano::write_transaction const & transaction_a, ta
 	auto col = table_to_column_family (table_a);
 
 	int status = static_cast<int> (rocksdb::Status::Code::kOk);
+	if (is_caching_counts (table_a))
+	{
+		// Reset counter to 0
+		status = put (transaction_a, tables::cached_counts, nano::rocksdb_val (rocksdb::Slice (col->GetName ())), nano::rocksdb_val (uint64_t{ 0 }));
+	}
+
 	if (success (status))
 	{
 		// Dropping/Creating families like in node::ongoing_peer_clear can cause write stalls, just delete them manually.
@@ -349,15 +446,14 @@ int nano::rocksdb_store::clear (rocksdb::ColumnFamilyHandle * column_family)
 	auto name = column_family->GetName ();
 	auto status = db->DropColumnFamily (column_family);
 	release_assert (status.ok ());
+	delete column_family;
 
 	// Need to add it back as we just want to clear the contents
-	auto handle_it = std::find_if (handles.begin (), handles.end (), [column_family](auto & handle) {
-		return handle.get () == column_family;
-	});
+	auto handle_it = std::find (handles.begin (), handles.end (), column_family);
 	debug_assert (handle_it != handles.cend ());
 	status = db->CreateColumnFamily (get_cf_options (), name, &column_family);
 	release_assert (status.ok ());
-	handle_it->reset (column_family);
+	*handle_it = column_family;
 	return status.code ();
 }
 
@@ -386,7 +482,10 @@ rocksdb::Options nano::rocksdb_store::get_db_options () const
 	db_options.OptimizeLevelStyleCompaction ();
 
 	// Adds a separate write queue for memtable/WAL
-	db_options.enable_pipelined_write = true;
+	db_options.enable_pipelined_write = rocksdb_config.enable_pipelined_write;
+
+	// Total size of memtables across column families. This can be used to manage the total memory used by memtables.
+	db_options.db_write_buffer_size = rocksdb_config.total_memtable_size * 1024 * 1024ULL;
 
 	return db_options;
 }
@@ -396,17 +495,21 @@ rocksdb::BlockBasedTableOptions nano::rocksdb_store::get_table_options () const
 	rocksdb::BlockBasedTableOptions table_options;
 
 	// Block cache for reads
-	table_options.block_cache = rocksdb::NewLRUCache (1024ULL * 1024 * base_block_cache_size * rocksdb_config.memory_multiplier);
+	table_options.block_cache = rocksdb::NewLRUCache (rocksdb_config.block_cache * 1024 * 1024ULL);
 
 	// Bloom filter to help with point reads
-	auto bloom_filter_bits = 10;
-	table_options.filter_policy.reset (rocksdb::NewBloomFilterPolicy (bloom_filter_bits, false));
+	auto bloom_filter_bits = rocksdb_config.bloom_filter_bits;
+	if (bloom_filter_bits > 0)
+	{
+		table_options.filter_policy.reset (rocksdb::NewBloomFilterPolicy (bloom_filter_bits, false));
+	}
 
 	// Increasing block_size decreases memory usage and space amplification, but increases read amplification.
-	table_options.block_size = 16 * 1024ULL;
+	table_options.block_size = rocksdb_config.block_size * 1024ULL;
 
-	// Whether index and filter blocks are stored in block_cache
-	table_options.pin_l0_filter_and_index_blocks_in_cache = true;
+	// Whether index and filter blocks are stored in block_cache. These settings should be synced
+	table_options.cache_index_and_filter_blocks = rocksdb_config.cache_index_and_filter_blocks;
+	table_options.pin_l0_filter_and_index_blocks_in_cache = rocksdb_config.cache_index_and_filter_blocks;
 
 	return table_options;
 }
@@ -420,7 +523,7 @@ rocksdb::ColumnFamilyOptions nano::rocksdb_store::get_cf_options () const
 	cf_options.level0_file_num_compaction_trigger = 4;
 
 	// L1 size, compaction is triggered for L0 at this size (4 SST files in L1)
-	cf_options.max_bytes_for_level_base = 1024ULL * 1024 * 4 * rocksdb_config.memory_multiplier * base_memtable_size;
+	cf_options.max_bytes_for_level_base = 1024ULL * 1024 * 4 * rocksdb_config.memtable_size;
 
 	// Each level is a multiple of the above. If L1 is 512MB. L2 will be 512 * 8 = 2GB. L3 will be 2GB * 8 = 16GB, and so on...
 	cf_options.max_bytes_for_level_multiplier = 8;
@@ -429,23 +532,23 @@ rocksdb::ColumnFamilyOptions nano::rocksdb_store::get_cf_options () const
 	cf_options.ttl = 1 * 24 * 60 * 60;
 
 	// Size of level 1 sst files
-	cf_options.target_file_size_base = 1024ULL * 1024 * rocksdb_config.memory_multiplier * base_memtable_size;
+	cf_options.target_file_size_base = 1024ULL * 1024 * rocksdb_config.memtable_size;
 
 	// Size of each memtable
-	cf_options.write_buffer_size = 1024ULL * 1024 * rocksdb_config.memory_multiplier * base_memtable_size;
+	cf_options.write_buffer_size = 1024ULL * 1024 * rocksdb_config.memtable_size;
 
 	// Size target of levels are changed dynamically based on size of the last level
 	cf_options.level_compaction_dynamic_level_bytes = true;
 
-	// Number of memtables to keep in memory (1 active, 1 inactive)
-	cf_options.max_write_buffer_number = 2;
+	// Number of memtables to keep in memory (1 active, rest inactive/immutable)
+	cf_options.max_write_buffer_number = rocksdb_config.num_memtables;
 
 	return cf_options;
 }
 
 std::vector<nano::tables> nano::rocksdb_store::all_tables () const
 {
-	return std::vector<nano::tables>{ tables::accounts, tables::blocks, tables::confirmation_height, tables::frontiers, tables::meta, tables::online_weight, tables::peers, tables::pending, tables::unchecked, tables::vote };
+	return std::vector<nano::tables>{ tables::accounts, tables::cached_counts, tables::change_blocks, tables::confirmation_height, tables::frontiers, tables::meta, tables::online_weight, tables::open_blocks, tables::peers, tables::pending, tables::receive_blocks, tables::representation, tables::send_blocks, tables::state_blocks, tables::unchecked, tables::vote };
 }
 
 bool nano::rocksdb_store::copy_db (boost::filesystem::path const & destination_path)
@@ -467,7 +570,7 @@ bool nano::rocksdb_store::copy_db (boost::filesystem::path const & destination_p
 		}
 	}
 
-	auto status = backup_engine->CreateNewBackup (db.get ());
+	auto status = backup_engine->CreateNewBackup (db);
 	if (!status.ok ())
 	{
 		return false;
@@ -485,29 +588,27 @@ bool nano::rocksdb_store::copy_db (boost::filesystem::path const & destination_p
 		}
 	}
 
+	rocksdb::BackupEngineReadOnly * backup_engine_read;
+	status = rocksdb::BackupEngineReadOnly::Open (rocksdb::Env::Default (), rocksdb::BackupableDBOptions (destination_path.string ()), &backup_engine_read);
+	if (!status.ok ())
 	{
-		std::unique_ptr<rocksdb::BackupEngineReadOnly> backup_engine_read;
-		{
-			rocksdb::BackupEngineReadOnly * backup_engine_read_raw;
-			status = rocksdb::BackupEngineReadOnly::Open (rocksdb::Env::Default (), rocksdb::BackupableDBOptions (destination_path.string ()), &backup_engine_read_raw);
-		}
-		if (!status.ok ())
-		{
-			return false;
-		}
-
-		// First remove all files (not directories) in the destination
-		for (auto const & path : boost::make_iterator_range (boost::filesystem::directory_iterator (destination_path)))
-		{
-			if (boost::filesystem::is_regular_file (path))
-			{
-				boost::filesystem::remove (path);
-			}
-		}
-
-		// Now generate the relevant files from the backup
-		status = backup_engine->RestoreDBFromLatestBackup (destination_path.string (), destination_path.string ());
+		delete backup_engine_read;
+		return false;
 	}
+
+	// First remove all files (not directories) in the destination
+	for (boost::filesystem::directory_iterator end_dir_it, it (destination_path); it != end_dir_it; ++it)
+	{
+		auto path = it->path ();
+		if (boost::filesystem::is_regular_file (path))
+		{
+			boost::filesystem::remove (it->path ());
+		}
+	}
+
+	// Now generate the relevant files from the backup
+	status = backup_engine->RestoreDBFromLatestBackup (destination_path.string (), destination_path.string ());
+	delete backup_engine_read;
 
 	// Open it so that it flushes all WAL files
 	if (status.ok ())
@@ -527,53 +628,5 @@ bool nano::rocksdb_store::init_error () const
 {
 	return error;
 }
-
-void nano::rocksdb_store::serialize_memory_stats (boost::property_tree::ptree & json)
-{
-	uint64_t val;
-
-	// Approximate size of active and unflushed immutable memtables (bytes).
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kCurSizeAllMemTables, &val);
-	json.put ("cur-size-all-mem-tables", val);
-
-	// Approximate size of active, unflushed immutable, and pinned immutable memtables (bytes).
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kSizeAllMemTables, &val);
-	json.put ("size-all-mem-tables", val);
-
-	// Estimated memory used for reading SST tables, excluding memory used in block cache (e.g. filter and index blocks).
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kEstimateTableReadersMem, &val);
-	json.put ("estimate-table-readers-mem", val);
-
-	//  An estimate of the amount of live data in bytes.
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kEstimateLiveDataSize, &val);
-	json.put ("estimate-live-data-size", val);
-
-	//  Returns 1 if at least one compaction is pending; otherwise, returns 0.
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kCompactionPending, &val);
-	json.put ("compaction-pending", val);
-
-	// Estimated number of total keys in the active and unflushed immutable memtables and storage.
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kEstimateNumKeys, &val);
-	json.put ("estimate-num-keys", val);
-
-	// Estimated total number of bytes compaction needs to rewrite to get all levels down
-	// to under target size. Not valid for other compactions than level-based.
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kEstimatePendingCompactionBytes, &val);
-	json.put ("estimate-pending-compaction-bytes", val);
-
-	//  Total size (bytes) of all SST files.
-	//  WARNING: may slow down online queries if there are too many files.
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kTotalSstFilesSize, &val);
-	json.put ("total-sst-files-size", val);
-
-	// Block cache capacity.
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kBlockCacheCapacity, &val);
-	json.put ("block-cache-capacity", val);
-
-	// Memory size for the entries residing in block cache.
-	db->GetAggregatedIntProperty (rocksdb::DB::Properties::kBlockCacheUsage, &val);
-	json.put ("block-cache-usage", val);
-}
-
 // Explicitly instantiate
 template class nano::block_store_partial<rocksdb::Slice, nano::rocksdb_store>;

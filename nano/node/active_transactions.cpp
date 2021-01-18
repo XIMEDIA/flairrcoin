@@ -24,9 +24,9 @@ confirmation_height_processor (confirmation_height_processor_a),
 node (node_a),
 multipliers_cb (20, 1.),
 trended_active_multiplier (1.0),
-generator (node_a.config, node_a.ledger, node_a.wallets, node_a.vote_processor, node_a.history, node_a.network),
-check_all_elections_period (node_a.network_params.network.is_dev_network () ? 10ms : 5s),
-election_time_to_live (node_a.network_params.network.is_dev_network () ? 0s : 2s),
+generator (node_a.config, node_a.ledger, node_a.wallets, node_a.vote_processor, node_a.votes_cache, node_a.network),
+check_all_elections_period (node_a.network_params.network.is_test_network () ? 10ms : 5s),
+election_time_to_live (node_a.network_params.network.is_test_network () ? 0s : 2s),
 prioritized_cutoff (std::max<size_t> (1, node_a.config.active_elections_size / 10)),
 thread ([this]() {
 	nano::thread_role::set (nano::thread_role::name::request_loop);
@@ -89,7 +89,7 @@ nano::frontiers_confirmation_info nano::active_transactions::get_frontiers_confi
 	bool half_princpal_representative (representative && rep_counts.half_principal > 0);
 	/* Check less frequently for regular nodes in auto mode */
 	bool agressive_mode (half_princpal_representative || node.config.frontiers_confirmation == nano::frontiers_confirmation_mode::always);
-	auto is_dev_network = node.network_params.network.is_dev_network ();
+	auto is_test_network = node.network_params.network.is_test_network ();
 	auto roots_size = size ();
 	auto check_time_exceeded = std::chrono::steady_clock::now () >= next_frontier_check;
 	auto max_elections = max_active_elections_frontier_insertion;
@@ -97,7 +97,7 @@ nano::frontiers_confirmation_info nano::active_transactions::get_frontiers_confi
 	bool wallets_check_required = (!skip_wallets || !priority_wallet_cementable_frontiers.empty ()) && !agressive_mode;
 	// Minimise dropping real-time transactions, set the number of frontiers added to a factor of the maximum number of possible active elections
 	auto max_active = node.config.active_elections_size / 20;
-	if (roots_size <= max_active && (check_time_exceeded || wallets_check_required || (!is_dev_network && low_active_elections && agressive_mode)))
+	if (roots_size <= max_active && (check_time_exceeded || wallets_check_required || (!is_test_network && low_active_elections && agressive_mode)))
 	{
 		// When the number of active elections is low increase max number of elections for setting confirmation height.
 		if (max_active > roots_size + max_elections)
@@ -118,9 +118,9 @@ void nano::active_transactions::set_next_frontier_check (bool agressive_mode_a)
 	auto request_interval (std::chrono::milliseconds (node.network_params.network.request_interval_ms));
 	auto rel_time_next_frontier_check = request_interval * (agressive_mode_a ? 20 : 60);
 	// Decrease check time for dev network
-	int dev_network_factor = node.network_params.network.is_dev_network () ? 1000 : 1;
+	int test_network_factor = node.network_params.network.is_test_network () ? 1000 : 1;
 
-	next_frontier_check = steady_clock::now () + (rel_time_next_frontier_check / dev_network_factor);
+	next_frontier_check = steady_clock::now () + (rel_time_next_frontier_check / test_network_factor);
 }
 
 void nano::active_transactions::confirm_prioritized_frontiers (nano::transaction const & transaction_a, uint64_t max_elections_a, uint64_t & elections_count_a)
@@ -171,7 +171,7 @@ void nano::active_transactions::block_cemented_callback (std::shared_ptr<nano::b
 	auto transaction = node.store.tx_begin_read ();
 
 	boost::optional<nano::election_status_type> election_status_type;
-	if (!confirmation_height_processor.is_processing_added_block (block_a->hash ()))
+	if (!confirmation_height_processor.is_processing_block (block_a->hash ()))
 	{
 		election_status_type = confirm_block (transaction, block_a);
 	}
@@ -395,7 +395,7 @@ void nano::active_transactions::frontiers_confirmation (nano::unique_lock<std::m
 	auto time_to_spend_confirming_pessimistic_accounts = time_to_spend_prioritizing_ledger_accounts;
 	lock_a.unlock ();
 	auto transaction = node.store.tx_begin_read ();
-	prioritize_frontiers_for_confirmation (transaction, node.network_params.network.is_dev_network () ? std::chrono::milliseconds (50) : time_to_spend_prioritizing_ledger_accounts, time_to_spend_prioritizing_wallet_accounts);
+	prioritize_frontiers_for_confirmation (transaction, node.network_params.network.is_test_network () ? std::chrono::milliseconds (50) : time_to_spend_prioritizing_ledger_accounts, time_to_spend_prioritizing_wallet_accounts);
 	auto frontiers_confirmation_info = get_frontiers_confirmation_info ();
 	if (frontiers_confirmation_info.can_start_elections ())
 	{
@@ -1050,7 +1050,7 @@ void nano::active_transactions::update_active_multiplier (nano::unique_lock<std:
 	last_prioritized_multiplier.reset ();
 	double multiplier (1.);
 	// Heurestic to filter out non-saturated network and frontier confirmation
-	if (roots.size () >= prioritized_cutoff || (node.network_params.network.is_dev_network () && !roots.empty ()))
+	if (roots.size () >= prioritized_cutoff || (node.network_params.network.is_test_network () && !roots.empty ()))
 	{
 		auto & sorted_roots = roots.get<tag_difficulty> ();
 		std::vector<double> prioritized;
@@ -1062,7 +1062,7 @@ void nano::active_transactions::update_active_multiplier (nano::unique_lock<std:
 				prioritized.push_back (it->multiplier);
 			}
 		}
-		if (prioritized.size () > 10 || (node.network_params.network.is_dev_network () && !prioritized.empty ()))
+		if (prioritized.size () > 10 || (node.network_params.network.is_test_network () && !prioritized.empty ()))
 		{
 			multiplier = prioritized[prioritized.size () / 2];
 		}

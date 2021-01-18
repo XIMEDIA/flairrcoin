@@ -5,7 +5,6 @@
 #include <nano/node/transport/tcp.hpp>
 
 #include <boost/format.hpp>
-#include <boost/variant/get.hpp>
 
 nano::bootstrap_listener::bootstrap_listener (uint16_t port_a, nano::node & node_a) :
 node (node_a),
@@ -328,8 +327,7 @@ void nano::bootstrap_server::receive_bulk_pull_account_action (boost::system::er
 		{
 			if (node->config.logging.bulk_pull_logging ())
 			{
-				// mFLR_ratio changed from Mxrb_ratio
-				node->logger.try_log (boost::str (boost::format ("Received bulk pull account for %1% with a minimum amount of %2%") % request->account.to_account () % nano::amount (request->minimum_amount).format_balance (nano::mFLR_ratio, 10, true)));
+				node->logger.try_log (boost::str (boost::format ("Received bulk pull account for %1% with a minimum amount of %2%") % request->account.to_account () % nano::amount (request->minimum_amount).format_balance (nano::Mxrb_ratio, 10, true)));
 			}
 			if (is_bootstrap_connection () && !node->flags.disable_bootstrap_bulk_pull_server)
 			{
@@ -433,14 +431,7 @@ void nano::bootstrap_server::receive_publish_action (boost::system::error_code c
 			{
 				if (is_realtime_connection ())
 				{
-					if (!nano::work_validate_entry (*request->block))
-					{
-						add_request (std::unique_ptr<nano::message> (request.release ()));
-					}
-					else
-					{
-						node->stats.inc_detail_only (nano::stat::type::error, nano::stat::detail::insufficient_work);
-					}
+					add_request (std::unique_ptr<nano::message> (request.release ()));
 				}
 				receive ();
 			}
@@ -493,26 +484,7 @@ void nano::bootstrap_server::receive_confirm_ack_action (boost::system::error_co
 		{
 			if (is_realtime_connection ())
 			{
-				bool process_vote (true);
-				if (header_a.block_type () != nano::block_type::not_a_block)
-				{
-					for (auto & vote_block : request->vote->blocks)
-					{
-						if (!vote_block.which ())
-						{
-							auto block (boost::get<std::shared_ptr<nano::block>> (vote_block));
-							if (nano::work_validate_entry (*block))
-							{
-								process_vote = false;
-								node->stats.inc_detail_only (nano::stat::type::error, nano::stat::detail::insufficient_work);
-							}
-						}
-					}
-				}
-				if (process_vote)
-				{
-					add_request (std::unique_ptr<nano::message> (request.release ()));
-				}
+				add_request (std::unique_ptr<nano::message> (request.release ()));
 			}
 			receive ();
 		}

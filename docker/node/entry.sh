@@ -81,13 +81,13 @@ case "${network}" in
 	beta)
 	dirSuffix='Beta'
 	;;
-	dev)
-	dirSuffix='Dev'
+	test)
+	dirSuffix='Test'
 	;;
 esac
 
 raidir="${HOME}/RaiBlocks${dirSuffix}"
-nanodir="${HOME}/FlairrcoinData${dirSuffix}"
+nanodir="${HOME}/Nano${dirSuffix}"
 dbFile="${nanodir}/data.ldb"
 
 if [ -d "${raidir}" ]; then
@@ -109,7 +109,7 @@ if [[ "${command[1]}" = "--daemon" ]]; then
 			dbFileSize="$(stat -c %s "${dbFile}" 2>/dev/null)"
 			if [ "${dbFileSize}" -gt $((1024 * 1024 * 1024 * db_size)) ]; then
 				echo "ERROR: Database size grew above ${db_size}GB (size = ${dbFileSize})" >&2
-				flairr_node --vacuum
+				nano_node --vacuum
 			fi
 		fi
 	fi

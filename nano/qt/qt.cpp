@@ -895,7 +895,7 @@ std::string nano_qt::status::text ()
 	std::string count_string;
 	{
 		auto size (wallet.wallet_m->wallets.node.ledger.cache.block_count.load ());
-		unchecked = wallet.wallet_m->wallets.node.store.unchecked_count (wallet.wallet_m->wallets.node.store.tx_begin_read ());
+		unchecked = wallet.wallet_m->wallets.node.ledger.cache.unchecked_count;
 		count_string = std::to_string (size);
 	}
 
@@ -972,8 +972,7 @@ std::string nano_qt::status::color ()
 }
 
 nano_qt::wallet::wallet (QApplication & application_a, nano_qt::eventloop_processor & processor_a, nano::node & node_a, std::shared_ptr<nano::wallet> wallet_a, nano::account & account_a) :
-// mFLR_ratio changed from Mxrb_ratio
-rendering_ratio (nano::mFLR_ratio),
+rendering_ratio (nano::Mxrb_ratio),
 node (node_a),
 wallet_m (wallet_a),
 account (account_a),
@@ -1434,17 +1433,14 @@ std::string nano_qt::wallet::format_balance (nano::uint128_t const & balance) co
 {
 	auto balance_str = nano::amount (balance).format_balance (rendering_ratio, 3, false);
 	auto unit = std::string ("NANO");
-	// kFLR_ratio changed from kxrb_ratio
-	if (rendering_ratio == nano::kFLR_ratio)
+	if (rendering_ratio == nano::kxrb_ratio)
 	{
 		unit = std::string ("knano");
 	}
-	// FLR_ratio changed from xrb_ratio
-	else if (rendering_ratio == nano::FLR_ratio)
+	else if (rendering_ratio == nano::xrb_ratio)
 	{
 		unit = std::string ("nano");
 	}
-	// Does raw_ratio need to be changed?
 	else if (rendering_ratio == nano::raw_ratio)
 	{
 		unit = std::string ("raw");
@@ -1821,31 +1817,27 @@ wallet (wallet_a)
 		if (mnano_unit->isChecked ())
 		{
 			QSettings ().setValue (saved_ratio_key, ratio_group->id (mnano_unit));
-			// mFLR_ratio changed from Mxrb_ratio
-			this->wallet.change_rendering_ratio (nano::mFLR_ratio);
+			this->wallet.change_rendering_ratio (nano::Mxrb_ratio);
 		}
 	});
 	QObject::connect (knano_unit, &QRadioButton::toggled, [this]() {
 		if (knano_unit->isChecked ())
 		{
 			QSettings ().setValue (saved_ratio_key, ratio_group->id (knano_unit));
-			// kFLR_ratio changed from kxrb_ratio
-			this->wallet.change_rendering_ratio (nano::kFLR_ratio);
+			this->wallet.change_rendering_ratio (nano::kxrb_ratio);
 		}
 	});
 	QObject::connect (nano_unit, &QRadioButton::toggled, [this]() {
 		if (nano_unit->isChecked ())
 		{
 			QSettings ().setValue (saved_ratio_key, ratio_group->id (nano_unit));
-			// FLR_ratio changed from xrb_ratio
-			this->wallet.change_rendering_ratio (nano::FLR_ratio);
+			this->wallet.change_rendering_ratio (nano::xrb_ratio);
 		}
 	});
 	QObject::connect (raw_unit, &QRadioButton::toggled, [this]() {
 		if (raw_unit->isChecked ())
 		{
 			QSettings ().setValue (saved_ratio_key, ratio_group->id (raw_unit));
-			// Does raw_ratio need to be changed?
 			this->wallet.change_rendering_ratio (nano::raw_ratio);
 		}
 	});

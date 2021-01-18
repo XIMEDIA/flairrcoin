@@ -111,7 +111,6 @@ public:
 	std::unordered_map<nano::block_hash, nano::uint128_t> last_tally;
 	std::chrono::seconds late_blocks_delay{ 5 };
 	uint64_t const height;
-	nano::root const root;
 
 	friend class active_transactions;
 };

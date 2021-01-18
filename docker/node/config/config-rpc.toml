@@ -5,4 +5,4 @@ address = "::ffff:0.0.0.0"
 
 # Enable or disable control-level requests
 # type:bool
-enable_control = true
+enable_control = false

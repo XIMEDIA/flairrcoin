@@ -1,8 +1,8 @@
+#include <nano/core_test/testutil.hpp>
 #include <nano/node/common.hpp>
 #include <nano/secure/buffer.hpp>
 #include <nano/secure/common.hpp>
 #include <nano/secure/network_filter.hpp>
-#include <nano/test_common/testutil.hpp>
 
 #include <gtest/gtest.h>
 
@@ -37,8 +37,7 @@ TEST (network_filter, unit)
 	{
 		one_block (genesis.open, true);
 	}
-	// FLR_ratio changed from xrb_ratio
-	auto new_block (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, genesis.open->hash (), nano::dev_genesis_key.pub, nano::genesis_amount - 10 * nano::FLR_ratio, nano::public_key (), nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, 0));
+	auto new_block (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.open->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 10 * nano::xrb_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, 0));
 	one_block (new_block, false);
 	for (int i = 0; i < 10; ++i)
 	{
@@ -58,8 +57,7 @@ TEST (network_filter, many)
 	nano::keypair key1;
 	for (int i = 0; i < 100; ++i)
 	{
-		// FLR_ratio changed from xrb_ratio
-		auto block (std::make_shared<nano::state_block> (nano::dev_genesis_key.pub, genesis.open->hash (), nano::dev_genesis_key.pub, nano::genesis_amount - i * 10 * nano::FLR_ratio, key1.pub, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, 0));
+		auto block (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.open->hash (), nano::test_genesis_key.pub, nano::genesis_amount - i * 10 * nano::xrb_ratio, key1.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, 0));
 
 		nano::publish message (block);
 		auto bytes (message.to_bytes (false));

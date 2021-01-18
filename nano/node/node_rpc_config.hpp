@@ -42,5 +42,7 @@ public:
 	// Used in tests to ensure requests are modified in specific cases
 	void set_request_callback (std::function<void(boost::property_tree::ptree const &)>);
 	std::function<void(boost::property_tree::ptree const &)> request_callback;
+private:
+	void migrate (nano::jsonconfig & json, boost::filesystem::path const & data_path);
 };
 }

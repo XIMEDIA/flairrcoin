@@ -209,24 +209,19 @@ std::unique_ptr<nano::container_info_component> nano::collect_container_info (co
 	return composite;
 }
 
-size_t nano::confirmation_height_processor::awaiting_processing_size () const
+size_t nano::confirmation_height_processor::awaiting_processing_size ()
 {
 	nano::lock_guard<std::mutex> guard (mutex);
 	return awaiting_processing.size ();
 }
 
-bool nano::confirmation_height_processor::is_processing_added_block (nano::block_hash const & hash_a) const
+bool nano::confirmation_height_processor::is_processing_block (nano::block_hash const & hash_a)
 {
 	nano::lock_guard<std::mutex> guard (mutex);
 	return original_hashes_pending.count (hash_a) > 0 || awaiting_processing.get<tag_hash> ().count (hash_a) > 0;
 }
 
-bool nano::confirmation_height_processor::is_processing_block (nano::block_hash const & hash_a) const
-{
-	return is_processing_added_block (hash_a) || unbounded_processor.has_iterated_over_block (hash_a);
-}
-
-nano::block_hash nano::confirmation_height_processor::current () const
+nano::block_hash nano::confirmation_height_processor::current ()
 {
 	nano::lock_guard<std::mutex> lk (mutex);
 	return original_hash;

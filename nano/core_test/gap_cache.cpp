@@ -1,5 +1,5 @@
+#include <nano/core_test/testutil.hpp>
 #include <nano/node/testing.hpp>
-#include <nano/test_common/testutil.hpp>
 
 #include <gtest/gtest.h>
 
@@ -24,7 +24,11 @@ TEST (gap_cache, add_existing)
 	ASSERT_NE (cache.blocks.get<1> ().end (), existing1);
 	auto arrival (existing1->arrival);
 	lock.unlock ();
-	ASSERT_TIMELY (20s, arrival != std::chrono::steady_clock::now ());
+	system.deadline_set (20s);
+	while (arrival == std::chrono::steady_clock::now ())
+	{
+		ASSERT_NO_ERROR (system.poll ());
+	}
 	cache.add (block1->hash ());
 	ASSERT_EQ (1, cache.size ());
 	lock.lock ();
@@ -44,7 +48,11 @@ TEST (gap_cache, comparison)
 	ASSERT_NE (cache.blocks.get<1> ().end (), existing1);
 	auto arrival (existing1->arrival);
 	lock.unlock ();
-	ASSERT_TIMELY (20s, std::chrono::steady_clock::now () != arrival);
+	system.deadline_set (20s);
+	while (std::chrono::steady_clock::now () == arrival)
+	{
+		ASSERT_NO_ERROR (system.poll ());
+	}
 	auto block3 (std::make_shared<nano::send_block> (0, 42, 1, nano::keypair ().prv, 3, 4));
 	cache.add (block3->hash ());
 	ASSERT_EQ (2, cache.size ());
@@ -65,9 +73,9 @@ TEST (gap_cache, gap_bootstrap)
 
 	auto & node1 (*system.nodes[0]);
 	auto & node2 (*system.nodes[1]);
-	nano::block_hash latest (node1.latest (nano::dev_genesis_key.pub));
+	nano::block_hash latest (node1.latest (nano::test_genesis_key.pub));
 	nano::keypair key;
-	auto send (std::make_shared<nano::send_block> (latest, key.pub, nano::genesis_amount - 100, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, *system.work.generate (latest)));
+	auto send (std::make_shared<nano::send_block> (latest, key.pub, nano::genesis_amount - 100, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (latest)));
 	node1.process (*send);
 	ASSERT_EQ (nano::genesis_amount - 100, node1.balance (nano::genesis_account));
 	ASSERT_EQ (nano::genesis_amount, node2.balance (nano::genesis_account));
@@ -81,8 +89,8 @@ TEST (gap_cache, gap_bootstrap)
 	}
 	ASSERT_TIMELY (2s, node1.block_confirmed (send->hash ()));
 	node1.active.erase (*send);
-	system.wallet (0)->insert_adhoc (nano::dev_genesis_key.prv);
-	auto latest_block (system.wallet (0)->send_action (nano::dev_genesis_key.pub, key.pub, 100));
+	system.wallet (0)->insert_adhoc (nano::test_genesis_key.prv);
+	auto latest_block (system.wallet (0)->send_action (nano::test_genesis_key.pub, key.pub, 100));
 	ASSERT_NE (nullptr, latest_block);
 	ASSERT_EQ (nano::genesis_amount - 200, node1.balance (nano::genesis_account));
 	ASSERT_EQ (nano::genesis_amount, node2.balance (nano::genesis_account));
@@ -95,8 +103,8 @@ TEST (gap_cache, two_dependencies)
 	auto & node1 (*system.nodes[0]);
 	nano::keypair key;
 	nano::genesis genesis;
-	auto send1 (std::make_shared<nano::send_block> (genesis.hash (), key.pub, 1, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, *system.work.generate (genesis.hash ())));
-	auto send2 (std::make_shared<nano::send_block> (send1->hash (), key.pub, 0, nano::dev_genesis_key.prv, nano::dev_genesis_key.pub, *system.work.generate (send1->hash ())));
+	auto send1 (std::make_shared<nano::send_block> (genesis.hash (), key.pub, 1, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
+	auto send2 (std::make_shared<nano::send_block> (send1->hash (), key.pub, 0, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send1->hash ())));
 	auto open (std::make_shared<nano::open_block> (send1->hash (), key.pub, key.pub, key.prv, key.pub, *system.work.generate (key.pub)));
 	ASSERT_EQ (0, node1.gap_cache.size ());
 	node1.block_processor.add (send2, nano::seconds_since_epoch ());

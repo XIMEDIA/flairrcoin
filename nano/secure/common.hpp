@@ -60,14 +60,6 @@ struct hash<::nano::qualified_root>
 		return std::hash<::nano::qualified_root> () (value_a);
 	}
 };
-template <>
-struct hash<::nano::root>
-{
-	size_t operator() (::nano::root const & value_a) const
-	{
-		return std::hash<::nano::root> () (value_a);
-	}
-};
 }
 namespace nano
 {
@@ -216,6 +208,16 @@ public:
 	nano::account account{ 0 };
 	nano::amount balance{ 0 };
 };
+class block_counts final
+{
+public:
+	size_t sum () const;
+	size_t send{ 0 };
+	size_t receive{ 0 };
+	size_t open{ 0 };
+	size_t change{ 0 };
+	size_t state{ 0 };
+};
 
 class confirmation_height_info final
 {
@@ -322,6 +324,10 @@ class process_return final
 {
 public:
 	nano::process_result code;
+	nano::account account;
+	nano::amount amount;
+	nano::account pending_account;
+	boost::optional<bool> state_is_send;
 	nano::signature_verification verified;
 	nano::amount previous_balance;
 };
@@ -370,19 +376,15 @@ class ledger_constants
 {
 public:
 	ledger_constants (nano::network_constants & network_constants);
-	// Possible new variables
 	ledger_constants (nano::nano_networks network_a);
 	nano::keypair zero_key;
-	nano::keypair dev_genesis_key;
-	// Possible new variables
-	nano::account nano_dev_account;
+	nano::keypair test_genesis_key;
+	nano::account nano_test_account;
 	nano::account nano_beta_account;
 	nano::account nano_live_account;
-	nano::account nano_test_account;
-	std::string nano_dev_genesis;
+	std::string nano_test_genesis;
 	std::string nano_beta_genesis;
 	std::string nano_live_genesis;
-	std::string nano_test_genesis;
 	nano::account genesis_account;
 	std::string genesis_block;
 	nano::block_hash genesis_hash;
@@ -495,7 +497,6 @@ public:
 	bool unchecked_count = true;
 	bool account_count = true;
 	bool epoch_2 = true;
-	bool block_count = true;
 
 	void enable_all ();
 };
@@ -507,6 +508,7 @@ public:
 	nano::rep_weights rep_weights;
 	std::atomic<uint64_t> cemented_count{ 0 };
 	std::atomic<uint64_t> block_count{ 0 };
+	std::atomic<uint64_t> unchecked_count{ 0 };
 	std::atomic<uint64_t> account_count{ 0 };
 	std::atomic<bool> epoch_2_started{ false };
 };

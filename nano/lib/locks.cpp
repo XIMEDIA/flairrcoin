@@ -1,10 +1,10 @@
-#if NANO_TIMED_LOCKS > 0
 #include <nano/lib/locks.hpp>
 #include <nano/lib/utility.hpp>
 
 #include <iostream>
 
-namespace nano
+#if NANO_TIMED_LOCKS > 0
+namespace
 {
 template <typename Mutex>
 void output (const char * str, std::chrono::milliseconds time, Mutex & mutex)
@@ -21,46 +21,33 @@ template <typename Mutex>
 void output_if_held_long_enough (nano::timer<std::chrono::milliseconds> & timer, Mutex & mutex)
 {
 	auto time_held = timer.since_start ();
-	// Does NANO_TIMED_LOCKS get changed?
 	if (time_held >= std::chrono::milliseconds (NANO_TIMED_LOCKS))
 	{
 		output ("held", time_held, mutex);
 	}
-	if (timer.current_state () != nano::timer_state::stopped)
-	{
-		timer.stop ();
-	}
+	timer.stop ();
 }
 
-// Does NANO_TIMED_LOCKS_IGNORE_BLOCKED get changed?
-#ifndef NANO_TIMED_LOCKS_IGNORE_BLOCKED
 template <typename Mutex>
 void output_if_blocked_long_enough (nano::timer<std::chrono::milliseconds> & timer, Mutex & mutex)
 {
 	auto time_blocked = timer.since_start ();
-	// Does NANO_TIMED_LOCKS get changed?
 	if (time_blocked >= std::chrono::milliseconds (NANO_TIMED_LOCKS))
 	{
 		output ("blocked", time_blocked, mutex);
 	}
 }
-#endif
+}
 
-// Explicit instantations
-template void output (const char * str, std::chrono::milliseconds time, std::mutex & mutex);
-template void output_if_held_long_enough (nano::timer<std::chrono::milliseconds> & timer, std::mutex & mutex);
-template void output_if_blocked_long_enough (nano::timer<std::chrono::milliseconds> & timer, std::mutex & mutex);
-
+namespace nano
+{
 lock_guard<std::mutex>::lock_guard (std::mutex & mutex) :
 mut (mutex)
 {
 	timer.start ();
 
 	mut.lock ();
-// Does NANO_TIMED_LOCKS_IGNORE_BLOCKED get changed?
-#ifndef NANO_TIMED_LOCKS_IGNORE_BLOCKED
 	output_if_blocked_long_enough (timer, mut);
-#endif
 }
 
 lock_guard<std::mutex>::~lock_guard () noexcept
@@ -68,6 +55,9 @@ lock_guard<std::mutex>::~lock_guard () noexcept
 	mut.unlock ();
 	output_if_held_long_enough (timer, mut);
 }
+
+// Explicit instantiations for allowed types
+template class lock_guard<std::mutex>;
 
 template <typename Mutex, typename U>
 unique_lock<Mutex, U>::unique_lock (Mutex & mutex) :
@@ -89,10 +79,8 @@ void unique_lock<Mutex, U>::lock_impl ()
 
 	mut->lock ();
 	owns = true;
-// Does NANO_TIMED_LOCKS_IGNORE_BLOCKED get changed?
-#ifndef NANO_TIMED_LOCKS_IGNORE_BLOCKED
+
 	output_if_blocked_long_enough (timer, *mut);
-#endif
 }
 
 template <typename Mutex, typename U>
@@ -199,29 +187,5 @@ void unique_lock<Mutex, U>::validate () const
 
 // Explicit instantiations for allowed types
 template class unique_lock<std::mutex>;
-
-void condition_variable::notify_one () noexcept
-{
-	cnd.notify_one ();
-}
-
-void condition_variable::notify_all () noexcept
-{
-	cnd.notify_all ();
-}
-
-void condition_variable::wait (nano::unique_lock<std::mutex> & lk)
-{
-	if (!lk.mut || !lk.owns)
-	{
-		throw (std::system_error (std::make_error_code (std::errc::operation_not_permitted)));
-	}
-
-	output_if_held_long_enough (lk.timer, *lk.mut);
-	// Start again in case cnd.wait calls unique_lock::lock/unlock () depending on some implementations
-	lk.timer.start ();
-	cnd.wait (lk);
-	lk.timer.restart ();
-}
 }
 #endif

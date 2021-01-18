@@ -49,8 +49,7 @@ void nano::public_key::encode_account (std::string & destination_a) const
 		number_l >>= 5;
 		destination_a.push_back (account_encode (r));
 	}
-	// "_onan" changed to "_rlf"
-	destination_a.append ("_rlf"); // flr_
+	destination_a.append ("_onan"); // nano_
 	std::reverse (destination_a.begin (), destination_a.end ());
 }
 
@@ -76,14 +75,15 @@ bool nano::public_key::decode_account (std::string const & source_a)
 	auto error (source_a.size () < 5);
 	if (!error)
 	{
-		// remove check for xrb_prefix and nano_prefix and node_id_prefix
-		auto flr_prefix (source_a[0] == 'f' && source_a[1] == 'l' && source_a[2] == 'r' && (source_a[3] == '_' || source_a[3] == '-'));
-		error = (flr_prefix && source_a.size () != 64);
+		auto xrb_prefix (source_a[0] == 'x' && source_a[1] == 'r' && source_a[2] == 'b' && (source_a[3] == '_' || source_a[3] == '-'));
+		auto nano_prefix (source_a[0] == 'n' && source_a[1] == 'a' && source_a[2] == 'n' && source_a[3] == 'o' && (source_a[4] == '_' || source_a[4] == '-'));
+		auto node_id_prefix = (source_a[0] == 'n' && source_a[1] == 'o' && source_a[2] == 'd' && source_a[3] == 'e' && source_a[4] == '_');
+		error = (xrb_prefix && source_a.size () != 64) || (nano_prefix && source_a.size () != 65);
 		if (!error)
 		{
-			if (flr_prefix)
+			if (xrb_prefix || nano_prefix || node_id_prefix)
 			{
-				auto i (source_a.begin () + (flr_prefix ? 4 : 5));
+				auto i (source_a.begin () + (xrb_prefix ? 4 : 5));
 				if (*i == '1' || *i == '3')
 				{
 					nano::uint512_t number_l;
