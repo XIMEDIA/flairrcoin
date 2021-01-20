@@ -98,29 +98,51 @@ void nano::json_handler::process_request (bool unsafe_a)
 				request.put ("head", request.get<std::string> ("hash"));
 				account_history ();
 			}
-			else if (action == "knano_from_raw" || action == "krai_from_raw")
+			//[k_from_raw] changed from [knano_from_raw]
+			//[kflr_from_raw] changed from [krai_from_raw]
+			else if (action == "k_from_raw" || action == "kflr_from_raw")
 			{
-				mnano_from_raw (nano::kxrb_ratio);
+				//[kFLR_ratio] changed from [kxrb_ratio]
+				//[mFLR_from_raw] changed from [mnano_from_raw]
+				mFLR_from_raw(nano::kFLR_ratio);
 			}
-			else if (action == "knano_to_raw" || action == "krai_to_raw")
+			//[kflr_to_raw] changed from [krai_to_raw]
+			// [k_to_raw] changed from [knano_to_raw] 
+			else if (action == "k_to_raw" || action == "kflr_to_raw")
 			{
-				mnano_to_raw (nano::kxrb_ratio);
+				//[kFLR_ratio] changed from [kxrb_ratio]
+				//[mFLR_to_raw] change from [mnano_to_raw]
+				mFLR_to_raw (nano::kFLR_ratio);
 			}
-			else if (action == "nano_from_raw" || action == "rai_from_raw")
+			//[raw_from_raw] changed from [rai_from_raw]
+			// [FLR_from_raw] changed from [nano_from_raw] 
+			else if (action == "FLR_from_raw" || action == "raw_from_raw")
 			{
-				mnano_from_raw (nano::xrb_ratio);
+				//[FLR_ratio] changed from [xrb_ratio]
+				//[mFLR_from_raw] changed from [mnano_from_raw]
+				mFLR_from_raw (nano::FLR_ratio);
 			}
-			else if (action == "nano_to_raw" || action == "rai_to_raw")
+			//[raw_to_raw] changed from[rai_to_raw]
+			//[FLR_to_raw] changed from [nano_to_raw] ??
+			else if (action == "FLR_to_raw" || action == "raw_to_raw")
 			{
-				mnano_to_raw (nano::xrb_ratio);
+				//[FLR_ratio] changed from [xrb_ratio]
+				//[mFLR_to_raw] changed from [mnano_to_raw]
+				mFLR_to_raw (nano::FLR_ratio);
 			}
-			else if (action == "mnano_from_raw" || action == "mrai_from_raw")
+			//[mFLR_from_raw] changed from [mnano_from_raw]
+			//[frl_from_raw] changed from [mrai_from_raw]
+			else if (action == "mFLR_from_raw" || action == "frl_from_raw")
 			{
-				mnano_from_raw ();
+				//[mFLR_from_raw] changed from [mnano_from_raw]
+				mFLR_from_raw ();
 			}
-			else if (action == "mnano_to_raw" || action == "mrai_to_raw")
+			//[flr_to_raw] changed from [mrai_to_raw]
+			//[mFLR_to_raw] changed from [mnano_to_raw]
+			else if (action == "mFLR_to_raw" || action == "flr_to_raw")
 			{
-				mnano_to_raw ();
+				//[mFLR_to_raw] changed from [mnano_to_raw]
+				mFLR_to_raw ();
 			}
 			else if (action == "password_valid")
 			{
@@ -979,6 +1001,7 @@ void nano::json_handler::active_difficulty ()
 
 void nano::json_handler::available_supply ()
 {
+	// change wallet
 	auto genesis_balance (node.balance (node.network_params.ledger.genesis_account)); // Cold storage genesis
 	auto landing_balance (node.balance (nano::account ("059F68AAB29DE0D3A27443625C7EA9CDDB6517A8B76FE37727EF6A4D76832AD5"))); // Active unavailable account
 	auto faucet_balance (node.balance (nano::account ("8E319CE6F3025E5B2DF66DA7AB1467FE48F1679C13DD43BFDB29FA2E9FC40D3B"))); // Faucet account
@@ -2610,7 +2633,8 @@ void nano::json_handler::ledger ()
 	response_errors ();
 }
 
-void nano::json_handler::mnano_from_raw (nano::uint128_t ratio)
+//[mFLR_from_raw] changed from [mnano_from_raw]
+void nano::json_handler::mFLR_from_raw (nano::uint128_t ratio)
 {
 	auto amount (amount_impl ());
 	if (!ec)
@@ -2620,8 +2644,8 @@ void nano::json_handler::mnano_from_raw (nano::uint128_t ratio)
 	}
 	response_errors ();
 }
-
-void nano::json_handler::mnano_to_raw (nano::uint128_t ratio)
+//[mFLR_to_raw] changed from [mnano_to_raw]
+void nano::json_handler::mFLR_to_raw (nano::uint128_t ratio)
 {
 	auto amount (amount_impl ());
 	if (!ec)
@@ -4100,7 +4124,8 @@ void nano::json_handler::version ()
 	response_l.put ("rpc_version", "1");
 	response_l.put ("store_version", std::to_string (node.store_version ()));
 	response_l.put ("protocol_version", std::to_string (node.network_params.protocol.protocol_version));
-	response_l.put ("node_vendor", boost::str (boost::format ("Nano %1%") % NANO_VERSION_STRING));
+	//["Flairrcoin %1%"] changed from ["Nano %1%"]
+	response_l.put ("node_vendor", boost::str (boost::format ("Flairrcoin %1%") % NANO_VERSION_STRING));
 	response_l.put ("store_vendor", node.store.vendor_get ());
 	response_l.put ("network", node.network_params.network.get_current_network_as_string ());
 	response_l.put ("network_identifier", node.network_params.ledger.genesis_hash.to_string ());

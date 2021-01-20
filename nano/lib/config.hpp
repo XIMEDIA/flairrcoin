@@ -105,11 +105,11 @@ public:
 	{
 		// A representative is classified as principal based on its weight and this factor
 		principal_weight_factor = 1000; // 0.1%
-
-		default_node_port = is_live_network () ? 7075 : is_beta_network () ? 54000 : 44000;
-		default_rpc_port = is_live_network () ? 7076 : is_beta_network () ? 55000 : 45000;
-		default_ipc_port = is_live_network () ? 7077 : is_beta_network () ? 56000 : 46000;
-		default_websocket_port = is_live_network () ? 7078 : is_beta_network () ? 57000 : 47000;
+		// change live ports
+		default_node_port = is_live_network () ? 7095 : is_beta_network () ? 54000 : 44000;
+		default_rpc_port = is_live_network () ? 7096 : is_beta_network () ? 55000 : 45000;
+		default_ipc_port = is_live_network () ? 7097 : is_beta_network () ? 56000 : 46000;
+		default_websocket_port = is_live_network () ? 7098 : is_beta_network () ? 57000 : 47000;
 		request_interval_ms = is_test_network () ? 20 : 500;
 	}
 

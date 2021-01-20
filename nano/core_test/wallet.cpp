@@ -346,7 +346,8 @@ TEST (account, encode_zero)
 	/*
 	 * Handle different lengths for "xrb_" prefixed and "nano_" prefixed accounts
 	 */
-	ASSERT_EQ ((str0.front () == 'x') ? 64 : 65, str0.size ());
+	//  f changed from x
+	ASSERT_EQ ((str0.front () == 'f') ? 64 : 65, str0.size ());
 	ASSERT_EQ (65, str0.size ());
 	nano::account number1;
 	ASSERT_FALSE (number1.decode_account (str0));
@@ -363,7 +364,8 @@ TEST (account, encode_all)
 	/*
 	 * Handle different lengths for "xrb_" prefixed and "nano_" prefixed accounts
 	 */
-	ASSERT_EQ ((str0.front () == 'x') ? 64 : 65, str0.size ());
+	//  f changed from x
+	ASSERT_EQ ((str0.front () == 'f') ? 64 : 65, str0.size ());
 	nano::account number1;
 	ASSERT_FALSE (number1.decode_account (str0));
 	ASSERT_EQ (number0, number1);
@@ -995,8 +997,9 @@ TEST (wallet, send_race)
 	nano::keypair key2;
 	for (auto i (1); i < 60; ++i)
 	{
-		ASSERT_NE (nullptr, system.wallet (0)->send_action (nano::test_genesis_key.pub, key2.pub, nano::Gxrb_ratio));
-		ASSERT_EQ (nano::genesis_amount - nano::Gxrb_ratio * i, system.nodes[0]->balance (nano::test_genesis_key.pub));
+		// gFLR_ratio changed from Gxrb_ratio
+		ASSERT_NE (nullptr, system.wallet (0)->send_action (nano::test_genesis_key.pub, key2.pub, nano::gFLR_ratio));
+		ASSERT_EQ (nano::genesis_amount - nano::gFLR_ratio * i, system.nodes[0]->balance (nano::test_genesis_key.pub));
 	}
 }
 
@@ -1291,7 +1294,8 @@ TEST (work_watcher, removed_after_lose)
 	auto const block1 (wallet.send_action (nano::test_genesis_key.pub, key.pub, 100));
 	ASSERT_TRUE (node.wallets.watcher->is_watched (block1->qualified_root ()));
 	nano::genesis genesis;
-	auto fork1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::xrb_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
+	// FLR_ratio changed from xrb_ratio
+	auto fork1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::FLR_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
 	node.process_active (fork1);
 	node.block_processor.flush ();
 	auto vote (std::make_shared<nano::vote> (nano::test_genesis_key.pub, nano::test_genesis_key.prv, 0, fork1));
@@ -1319,7 +1323,8 @@ TEST (work_watcher, generation_disabled)
 	nano::work_pool pool (std::numeric_limits<unsigned>::max ());
 	nano::genesis genesis;
 	nano::keypair key;
-	auto block (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Mxrb_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ())));
+	// mFLR_ratio changed from Mxrb_ratio
+	auto block (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::mFLR_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ())));
 	auto difficulty (block->difficulty ());
 	node.wallets.watcher->add (block);
 	ASSERT_FALSE (node.process_local (block).code != nano::process_result::progress);

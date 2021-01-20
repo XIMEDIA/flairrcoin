@@ -46,15 +46,18 @@ public:
 	uint16_t peering_port{ 0 };
 	nano::logging logging;
 	std::vector<std::pair<std::string, uint16_t>> work_peers;
-	std::vector<std::pair<std::string, uint16_t>> secondary_work_peers{ { "127.0.0.1", 8076 } }; /* Default of nano-pow-server */
+	std::vector<std::pair<std::string, uint16_t>> secondary_work_peers{ { "127.0.0.1", 8086 } }; /* Default of nano-pow-server */
 	std::vector<std::string> preconfigured_peers;
 	std::vector<nano::account> preconfigured_representatives;
 	unsigned bootstrap_fraction_numerator{ 1 };
-	nano::amount receive_minimum{ nano::xrb_ratio };
-	nano::amount vote_minimum{ nano::Gxrb_ratio };
+	// [FLR_ratio] changed from [xrb_ratio]
+	nano::amount receive_minimum{ nano::FLR_ratio };
+	// [gFLR_ratio] changed from [Gxrb_ratio]
+	nano::amount vote_minimum{ nano::gFLR_ratio };
 	std::chrono::milliseconds vote_generator_delay{ std::chrono::milliseconds (100) };
 	unsigned vote_generator_threshold{ 3 };
-	nano::amount online_weight_minimum{ 60000 * nano::Gxrb_ratio };
+	// [gFLR_ratio] changed from [Gxrb_ratio]
+	nano::amount online_weight_minimum{ 60000 * nano::gFLR_ratio };
 	unsigned online_weight_quorum{ 50 };
 	unsigned election_hint_weight_percent{ 10 };
 	unsigned password_fanout{ 1024 };

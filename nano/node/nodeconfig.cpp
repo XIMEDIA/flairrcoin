@@ -10,13 +10,19 @@
 
 #include <boost/format.hpp>
 
+/**
+ * "[peering.flairrcoin.com]- changed from [peering-beta.nano.org]"
+ * 
+ * "[peering.flairrcoin.com]- changed from [peering.nano.org]"
+
+ */
 namespace
 {
 const char * preconfigured_peers_key = "preconfigured_peers";
 const char * signature_checker_threads_key = "signature_checker_threads";
 const char * pow_sleep_interval_key = "pow_sleep_interval";
-const char * default_beta_peer_network = "peering-beta.nano.org";
-const char * default_live_peer_network = "peering.nano.org";
+const char * default_beta_peer_network = "peering.flairrcoin.com";
+const char * default_live_peer_network = "peering.flairrcoin.com";
 }
 
 nano::node_config::node_config () :
@@ -45,20 +51,15 @@ external_address (boost::asio::ip::address_v6{}.to_string ())
 		{
 			preconfigured_peers.push_back (default_beta_peer_network);
 			nano::account offline_representative;
-			release_assert (!offline_representative.decode_account ("nano_1defau1t9off1ine9rep99999999999999999999999999999999wgmuzxxy"));
+			// flr_ changed from nano_
+			release_assert (!offline_representative.decode_account ("flr_1defau1t9off1ine9rep99999999999999999999999999999999wgmuzxxy"));
 			preconfigured_representatives.emplace_back (offline_representative);
 			break;
 		}
 		case nano::nano_networks::nano_live_network:
 			preconfigured_peers.push_back (default_live_peer_network);
-			preconfigured_representatives.emplace_back ("A30E0A32ED41C8607AA9212843392E853FCBCB4E7CB194E35C94F07F91DE59EF");
-			preconfigured_representatives.emplace_back ("67556D31DDFC2A440BF6147501449B4CB9572278D034EE686A6BEE29851681DF");
-			preconfigured_representatives.emplace_back ("5C2FBB148E006A8E8BA7A75DD86C9FE00C83F5FFDBFD76EAA09531071436B6AF");
-			preconfigured_representatives.emplace_back ("AE7AC63990DAAAF2A69BF11C913B928844BF5012355456F2F164166464024B29");
-			preconfigured_representatives.emplace_back ("BD6267D6ECD8038327D2BCC0850BDF8F56EC0414912207E81BCF90DFAC8A4AAA");
-			preconfigured_representatives.emplace_back ("2399A083C600AA0572F5E36247D978FCFC840405F8D4B6D33161C0066A55F431");
-			preconfigured_representatives.emplace_back ("2298FAB7C61058E77EA554CB93EDEEDA0692CBFCC540AB213B2836B29029E23A");
-			preconfigured_representatives.emplace_back ("3FE80B4BC842E82C1C18ABFEEC47EA989E63953BC82AC411F304D13833D52A56");
+			preconfigured_representatives.emplace_back ("49090ABA8FBA92A0FEAC38FEF1AB845ED5C99419F8632C4F403CCE6371888458");
+			//preconfigured_representatives.emplace_back ("494A6A3A174FD4706F1A735809AB6F0CED0F79A80958D7DE3DA88115E52A6FFC");
 			break;
 		default:
 			debug_assert (false);
@@ -542,10 +543,12 @@ bool nano::node_config::upgrade_json (unsigned version_a, nano::jsonconfig & jso
 		}
 		case 3:
 			json.erase ("receive_minimum");
-			json.put ("receive_minimum", nano::xrb_ratio.convert_to<std::string> ());
+			// FLR_ratio changed from xrb_ratio
+			json.put ("receive_minimum", nano::FLR_ratio.convert_to<std::string> ());
 		case 4:
 			json.erase ("receive_minimum");
-			json.put ("receive_minimum", nano::xrb_ratio.convert_to<std::string> ());
+			// FLR_ratio changed from xrb_ratio
+			json.put ("receive_minimum", nano::FLR_ratio.convert_to<std::string> ());
 		case 5:
 			json.put ("enable_voting", enable_voting);
 			json.erase ("packet_delay_microseconds");
@@ -592,11 +595,13 @@ bool nano::node_config::upgrade_json (unsigned version_a, nano::jsonconfig & jso
 			auto peers_l (json.get_required_child (preconfigured_peers_key));
 			nano::jsonconfig peers;
 			peers_l.array_entries<std::string> ([&peers](std::string entry) {
-				if (entry == "rai-beta.raiblocks.net")
+				// beta.flairrcoin.com changed from rai-beta.raiblocks.net
+				if (entry == "beta.flairrcoin.com")
 				{
 					entry = default_beta_peer_network;
 				}
-				else if (entry == "rai.raiblocks.net")
+				// peering.flairrcoin.com changed from rai.raiblocks.net
+				else if (entry == "peering.flairrcoin.com")
 				{
 					entry = default_live_peer_network;
 				}

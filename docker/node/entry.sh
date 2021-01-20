@@ -87,7 +87,7 @@ case "${network}" in
 esac
 
 raidir="${HOME}/RaiBlocks${dirSuffix}"
-nanodir="${HOME}/Nano${dirSuffix}"
+nanodir="${HOME}/FlairrcoinData${dirSuffix}"
 dbFile="${nanodir}/data.ldb"
 
 if [ -d "${raidir}" ]; then
@@ -109,7 +109,7 @@ if [[ "${command[1]}" = "--daemon" ]]; then
 			dbFileSize="$(stat -c %s "${dbFile}" 2>/dev/null)"
 			if [ "${dbFileSize}" -gt $((1024 * 1024 * 1024 * db_size)) ]; then
 				echo "ERROR: Database size grew above ${db_size}GB (size = ${dbFileSize})" >&2
-				nano_node --vacuum
+				flairr_node --vacuum
 			fi
 		fi
 	fi

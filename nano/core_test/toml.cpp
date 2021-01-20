@@ -315,16 +315,18 @@ TEST (toml, dot_child_syntax)
 	ASSERT_EQ (c, 3);
 }
 
+// change port 7075 -> 7095
+// change port 8075 -> 8085
 TEST (toml, base_override)
 {
 	std::stringstream ss_base;
 	ss_base << R"toml(
-	        node.peering_port=7075
+	        node.peering_port=7095
 	)toml";
 
 	std::stringstream ss_override;
 	ss_override << R"toml(
-	        node.peering_port=8075
+	        node.peering_port=8085
 			node.too_big=70000
 	)toml";
 
@@ -390,6 +392,7 @@ TEST (toml, daemon_config_deserialize_no_defaults)
 {
 	std::stringstream ss;
 
+	// flr_ changed from nano_
 	ss << R"toml(
 	[node]
 	active_elections_size = 999
@@ -417,7 +420,7 @@ TEST (toml, daemon_config_deserialize_no_defaults)
 	peering_port = 999
 	pow_sleep_interval= 999
 	preconfigured_peers = ["test.org"]
-	preconfigured_representatives = ["nano_3arg3asgtigae3xckabaaewkx3bzsh7nwz7jkmjos79ihyaxwphhm6qgjps4"]
+	preconfigured_representatives = ["flr_3arg3asgtigae3xckabaaewkx3bzsh7nwz7jkmjos79ihyaxwphhm6qgjps4"]
 	receive_minimum = "999"
 	signature_checker_threads = 999
 	tcp_incoming_connections_max = 999
@@ -540,7 +543,7 @@ TEST (toml, daemon_config_deserialize_no_defaults)
 
 	[rpc.child_process]
 	enable = true
-	rpc_path = "/test/nano_rpc"
+	rpc_path = "/test/flr_rpc"
 	)toml";
 
 	nano::tomlconfig toml;

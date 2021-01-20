@@ -16,7 +16,8 @@ int create_load_memory_address_file (dl_phdr_info * info, size_t, void *)
 	static int counter = 0;
 	debug_assert (counter <= 99);
 	// Create filename
-	const char file_prefix[] = "nano_node_crash_load_address_dump_";
+	// flr changed from nano
+	const char file_prefix[] = "flr_node_crash_load_address_dump_";
 	// Holds the filename prefix, a unique (max 2 digits) number and extension (null terminator is included in file_prefix size)
 	char filename[sizeof (file_prefix) + 2 + 4];
 	snprintf (filename, sizeof (filename), "%s%d.txt", file_prefix, counter);

@@ -265,7 +265,8 @@ TEST (websocket, confirmation_options)
 	std::atomic<bool> ack_ready{ false };
 	auto task1 = ([&ack_ready, config, &node1]() {
 		fake_websocket_client client (config.websocket_config.port);
-		client.send_message (R"json({"action": "subscribe", "topic": "confirmation", "ack": "true", "options": {"confirmation_type": "active_quorum", "accounts": ["xrb_invalid"]}})json");
+		// flr_invalid changed from xrb_invalid
+		client.send_message (R"json({"action": "subscribe", "topic": "confirmation", "ack": "true", "options": {"confirmation_type": "active_quorum", "accounts": ["flr_invalid"]}})json");
 		client.await_ack ();
 		ack_ready = true;
 		EXPECT_EQ (1, node1->websocket_server->subscriber_count (nano::websocket::topic::confirmation));
@@ -436,7 +437,8 @@ TEST (websocket, confirmation_options_update)
 	nano::genesis genesis;
 	nano::keypair key;
 	auto previous (node1->latest (nano::test_genesis_key.pub));
-	auto send (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, previous, nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (previous)));
+	// gFLR_ratio changed from Gxrb_ratio
+	auto send (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, previous, nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (previous)));
 	node1->process_active (send);
 
 	// Wait for delete acknowledgement
@@ -448,7 +450,8 @@ TEST (websocket, confirmation_options_update)
 
 	// Confirm another block
 	previous = send->hash ();
-	auto send2 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, previous, nano::test_genesis_key.pub, nano::genesis_amount - 2 * nano::Gxrb_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (previous)));
+	// gFLR_ratio changed from Gxrb_ratio
+	auto send2 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, previous, nano::test_genesis_key.pub, nano::genesis_amount - 2 * nano::gFLR_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (previous)));
 	node1->process_active (send2);
 
 	system.deadline_set (5s);
@@ -611,7 +614,8 @@ TEST (websocket, vote_options_representatives)
 	ack_ready = false;
 	auto task2 = ([&ack_ready, config, &node1]() {
 		fake_websocket_client client (config.websocket_config.port);
-		client.send_message (R"json({"action": "subscribe", "topic": "vote", "ack": "true", "options": {"representatives": ["xrb_invalid"]}})json");
+		// flr_invalid changed from xrb_invalid
+		client.send_message (R"json({"action": "subscribe", "topic": "vote", "ack": "true", "options": {"representatives": ["flr_invalid"]}})json");
 		client.await_ack ();
 		ack_ready = true;
 		EXPECT_EQ (1, node1->websocket_server->subscriber_count (nano::websocket::topic::vote));

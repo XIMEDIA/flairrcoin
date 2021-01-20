@@ -11,6 +11,7 @@
 
 #include <boost/filesystem.hpp>
 
+// Check this Sopheap
 #if NANO_ROCKSDB
 #include <nano/node/rocksdb/rocksdb.hpp>
 #endif
@@ -950,7 +951,7 @@ TEST (mdb_block_store, upgrade_v4_v5)
 		ASSERT_FALSE (store.account_get (transaction, nano::test_genesis_key.pub, info));
 		nano::keypair key0;
 		nano::work_pool pool (std::numeric_limits<unsigned>::max ());
-		nano::send_block block0 (info.head, key0.pub, nano::genesis_amount - nano::Gxrb_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (info.head));
+		nano::send_block block0 (info.head, key0.pub, nano::genesis_amount - nano::gFLR_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (info.head)); // gFLR_ratio changed from Gxrb_ratio
 		ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, block0).code);
 		hash = block0.hash ();
 		auto original (store.block_get (transaction, info.head));
@@ -959,7 +960,7 @@ TEST (mdb_block_store, upgrade_v4_v5)
 		ASSERT_TRUE (store.block_successor (transaction, genesis_hash).is_zero ());
 		modify_genesis_account_info_to_v5 (store, transaction);
 		// The pending send needs to be the correct version
-		auto status (mdb_put (store.env.tx (transaction), store.pending_v0, nano::mdb_val (nano::pending_key (key0.pub, block0.hash ())), nano::mdb_val (nano::pending_info_v14 (nano::genesis_account, nano::Gxrb_ratio, nano::epoch::epoch_0)), 0));
+		auto status (mdb_put (store.env.tx (transaction), store.pending_v0, nano::mdb_val (nano::pending_key (key0.pub, block0.hash ())), nano::mdb_val (nano::pending_info_v14 (nano::genesis_account, nano::gFLR_ratio, nano::epoch::epoch_0)), 0)); // gFLR_ratio changed from Gxrb_ratio
 		ASSERT_EQ (status, MDB_SUCCESS);
 		store.confirmation_height_del (transaction, nano::genesis_account);
 	}
@@ -1254,7 +1255,7 @@ TEST (mdb_block_store, upgrade_sideband_two_blocks)
 		store.version_put (transaction, 11);
 		store.initialize (transaction, genesis, ledger.cache);
 		nano::work_pool pool (std::numeric_limits<unsigned>::max ());
-		nano::state_block block (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ()));
+		nano::state_block block (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ())); // gFLR_ratio changed from Gxrb_ratio
 		hash2 = block.hash ();
 		ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, block).code);
 		store.block_del (transaction, hash2, block.type ());
@@ -1263,7 +1264,7 @@ TEST (mdb_block_store, upgrade_sideband_two_blocks)
 		write_sideband_v12 (store, transaction, *genesis.open, hash2, store.open_blocks);
 		write_sideband_v12 (store, transaction, block, 0, store.state_blocks_v0);
 		modify_account_info_to_v13 (store, transaction, nano::genesis_account, hash2);
-		auto status (mdb_put (store.env.tx (transaction), store.pending_v0, nano::mdb_val (nano::pending_key (nano::test_genesis_key.pub, block.hash ())), nano::mdb_val (nano::pending_info_v14 (nano::genesis_account, nano::Gxrb_ratio, nano::epoch::epoch_0)), 0));
+		auto status (mdb_put (store.env.tx (transaction), store.pending_v0, nano::mdb_val (nano::pending_key (nano::test_genesis_key.pub, block.hash ())), nano::mdb_val (nano::pending_info_v14 (nano::genesis_account, nano::gFLR_ratio, nano::epoch::epoch_0)), 0)); // gFLR_ratio changed from Gxrb_ratio
 		ASSERT_EQ (status, MDB_SUCCESS);
 		store.confirmation_height_del (transaction, nano::genesis_account);
 	}
@@ -1296,10 +1297,10 @@ TEST (mdb_block_store, upgrade_sideband_two_accounts)
 		store.version_put (transaction, 11);
 		store.initialize (transaction, genesis, ledger.cache);
 		nano::work_pool pool (std::numeric_limits<unsigned>::max ());
-		nano::state_block block1 (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ()));
+		nano::state_block block1 (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ())); // gFLR_ratio changed from Gxrb_ratio
 		hash2 = block1.hash ();
 		ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, block1).code);
-		nano::state_block block2 (key.pub, 0, nano::test_genesis_key.pub, nano::Gxrb_ratio, hash2, key.prv, key.pub, *pool.generate (key.pub));
+		nano::state_block block2 (key.pub, 0, nano::test_genesis_key.pub, nano::gFLR_ratio, hash2, key.prv, key.pub, *pool.generate (key.pub)); // gFLR_ratio changed from Gxrb_ratio
 		hash3 = block2.hash ();
 		ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, block2).code);
 		store.block_del (transaction, hash2, block1.type ());
@@ -1344,7 +1345,7 @@ TEST (mdb_block_store, insert_after_legacy)
 	mdb_dbi_open (store.env.tx (transaction), "state_v1", MDB_CREATE, &store.state_blocks_v1);
 	write_sideband_v12 (store, transaction, *genesis.open, 0, store.open_blocks);
 	nano::work_pool pool (std::numeric_limits<unsigned>::max ());
-	nano::state_block block (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ()));
+	nano::state_block block (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, block).code);
 }
 
@@ -1410,7 +1411,7 @@ TEST (mdb_block_store, upgrade_sideband_epoch)
 	ASSERT_EQ (nano::epoch::epoch_1, store.block_version (transaction, hash2));
 	auto block1 (store.block_get (transaction, hash2));
 	ASSERT_NE (0, block1->sideband ().height);
-	nano::state_block block2 (nano::test_genesis_key.pub, hash2, nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (hash2));
+	nano::state_block block2 (nano::test_genesis_key.pub, hash2, nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (hash2)); // gFLR_ratio changed from Gxrb_ratio
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, block2).code);
 	ASSERT_EQ (nano::epoch::epoch_1, store.block_version (transaction, block2.hash ()));
 }
@@ -1429,27 +1430,27 @@ TEST (mdb_block_store, sideband_height)
 	auto transaction (store.tx_begin_write ());
 	store.initialize (transaction, genesis, ledger.cache);
 	nano::work_pool pool (std::numeric_limits<unsigned>::max ());
-	nano::send_block send (genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ()));
+	nano::send_block send (genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, send).code);
 	nano::receive_block receive (send.hash (), send.hash (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (send.hash ()));
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, receive).code);
 	nano::change_block change (receive.hash (), 0, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (receive.hash ()));
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, change).code);
-	nano::state_block state_send1 (nano::test_genesis_key.pub, change.hash (), 0, nano::genesis_amount - nano::Gxrb_ratio, key1.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (change.hash ()));
+	nano::state_block state_send1 (nano::test_genesis_key.pub, change.hash (), 0, nano::genesis_amount - nano::gFLR_ratio, key1.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (change.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, state_send1).code);
-	nano::state_block state_send2 (nano::test_genesis_key.pub, state_send1.hash (), 0, nano::genesis_amount - 2 * nano::Gxrb_ratio, key2.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_send1.hash ()));
+	nano::state_block state_send2 (nano::test_genesis_key.pub, state_send1.hash (), 0, nano::genesis_amount - 2 * nano::gFLR_ratio, key2.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_send1.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, state_send2).code);
-	nano::state_block state_send3 (nano::test_genesis_key.pub, state_send2.hash (), 0, nano::genesis_amount - 3 * nano::Gxrb_ratio, key3.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_send2.hash ()));
+	nano::state_block state_send3 (nano::test_genesis_key.pub, state_send2.hash (), 0, nano::genesis_amount - 3 * nano::gFLR_ratio, key3.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_send2.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, state_send3).code);
-	nano::state_block state_open (key1.pub, 0, 0, nano::Gxrb_ratio, state_send1.hash (), key1.prv, key1.pub, *pool.generate (key1.pub));
+	nano::state_block state_open (key1.pub, 0, 0, nano::gFLR_ratio, state_send1.hash (), key1.prv, key1.pub, *pool.generate (key1.pub));
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, state_open).code);
-	nano::state_block epoch (key1.pub, state_open.hash (), 0, nano::Gxrb_ratio, ledger.epoch_link (nano::epoch::epoch_1), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_open.hash ()));
+	nano::state_block epoch (key1.pub, state_open.hash (), 0, nano::gFLR_ratio, ledger.epoch_link (nano::epoch::epoch_1), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_open.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, epoch).code);
 	ASSERT_EQ (nano::epoch::epoch_1, store.block_version (transaction, epoch.hash ()));
 	nano::state_block epoch_open (key2.pub, 0, 0, 0, ledger.epoch_link (nano::epoch::epoch_1), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (key2.pub));
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, epoch_open).code);
 	ASSERT_EQ (nano::epoch::epoch_1, store.block_version (transaction, epoch_open.hash ()));
-	nano::state_block state_receive (key2.pub, epoch_open.hash (), 0, nano::Gxrb_ratio, state_send2.hash (), key2.prv, key2.pub, *pool.generate (epoch_open.hash ()));
+	nano::state_block state_receive (key2.pub, epoch_open.hash (), 0, nano::gFLR_ratio, state_send2.hash (), key2.prv, key2.pub, *pool.generate (epoch_open.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, state_receive).code);
 	nano::open_block open (state_send3.hash (), nano::test_genesis_key.pub, key3.pub, key3.prv, key3.pub, *pool.generate (key3.pub));
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, open).code);
@@ -1660,9 +1661,9 @@ TEST (mdb_block_store, upgrade_v14_v15)
 	nano::genesis genesis;
 	nano::network_params network_params;
 	nano::work_pool pool (std::numeric_limits<unsigned>::max ());
-	nano::send_block send (genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ()));
-	nano::state_block epoch (nano::test_genesis_key.pub, send.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, network_params.ledger.epochs.link (nano::epoch::epoch_1), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (send.hash ()));
-	nano::state_block state_send (nano::test_genesis_key.pub, epoch.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio * 2, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (epoch.hash ()));
+	nano::send_block send (genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ())); // gFLR_ratio changed from Gxrb_ratio
+	nano::state_block epoch (nano::test_genesis_key.pub, send.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, network_params.ledger.epochs.link (nano::epoch::epoch_1), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (send.hash ())); // gFLR_ratio changed from Gxrb_ratio
+	nano::state_block state_send (nano::test_genesis_key.pub, epoch.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio * 2, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (epoch.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	{
 		nano::logger_mt logger;
 		nano::mdb_store store (logger, path);
@@ -1698,8 +1699,8 @@ TEST (mdb_block_store, upgrade_v14_v15)
 		store.block_del (transaction, epoch.hash (), epoch.type ());
 
 		// Turn pending into v14
-		ASSERT_FALSE (mdb_put (store.env.tx (transaction), store.pending_v0, nano::mdb_val (nano::pending_key (nano::test_genesis_key.pub, send.hash ())), nano::mdb_val (nano::pending_info_v14 (nano::genesis_account, nano::Gxrb_ratio, nano::epoch::epoch_0)), 0));
-		ASSERT_FALSE (mdb_put (store.env.tx (transaction), store.pending_v1, nano::mdb_val (nano::pending_key (nano::test_genesis_key.pub, state_send.hash ())), nano::mdb_val (nano::pending_info_v14 (nano::genesis_account, nano::Gxrb_ratio, nano::epoch::epoch_1)), 0));
+		ASSERT_FALSE (mdb_put (store.env.tx (transaction), store.pending_v0, nano::mdb_val (nano::pending_key (nano::test_genesis_key.pub, send.hash ())), nano::mdb_val (nano::pending_info_v14 (nano::genesis_account, nano::gFLR_ratio, nano::epoch::epoch_0)), 0)); // gFLR_ratio changed from Gxrb_ratio
+		ASSERT_FALSE (mdb_put (store.env.tx (transaction), store.pending_v1, nano::mdb_val (nano::pending_key (nano::test_genesis_key.pub, state_send.hash ())), nano::mdb_val (nano::pending_info_v14 (nano::genesis_account, nano::gFLR_ratio, nano::epoch::epoch_1)), 0)); // gFLR_ratio changed from Gxrb_ratio
 
 		// This should fail as sizes are no longer correct for account_info
 		nano::mdb_val value;
@@ -1801,9 +1802,9 @@ TEST (mdb_block_store, upgrade_v16_v17)
 {
 	nano::genesis genesis;
 	nano::work_pool pool (std::numeric_limits<unsigned>::max ());
-	nano::state_block block1 (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ()));
-	nano::state_block block2 (nano::test_genesis_key.pub, block1.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio - 1, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (block1.hash ()));
-	nano::state_block block3 (nano::test_genesis_key.pub, block2.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio - 2, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (block2.hash ()));
+	nano::state_block block1 (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ())); // gFLR_ratio changed from Gxrb_ratio
+	nano::state_block block2 (nano::test_genesis_key.pub, block1.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio - 1, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (block1.hash ())); // gFLR_ratio changed from Gxrb_ratio
+	nano::state_block block3 (nano::test_genesis_key.pub, block2.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio - 2, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (block2.hash ())); // gFLR_ratio changed from Gxrb_ratio
 
 	auto code = [&block1, &block2, &block3](auto confirmation_height, nano::block_hash const & expected_cemented_frontier) {
 		auto path (nano::unique_path ());
@@ -1862,14 +1863,14 @@ TEST (mdb_block_store, upgrade_v17_v18)
 	nano::send_block send_zero (genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (genesis.hash ()));
 	nano::state_block state_receive_zero (nano::test_genesis_key.pub, send_zero.hash (), nano::test_genesis_key.pub, nano::genesis_amount, send_zero.hash (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (send_zero.hash ()));
 	nano::state_block epoch (nano::test_genesis_key.pub, state_receive_zero.hash (), nano::test_genesis_key.pub, nano::genesis_amount, network_params.ledger.epochs.link (nano::epoch::epoch_1), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_receive_zero.hash ()));
-	nano::state_block state_send (nano::test_genesis_key.pub, epoch.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (epoch.hash ()));
+	nano::state_block state_send (nano::test_genesis_key.pub, epoch.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (epoch.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	nano::state_block state_receive (nano::test_genesis_key.pub, state_send.hash (), nano::test_genesis_key.pub, nano::genesis_amount, state_send.hash (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_send.hash ()));
 	nano::state_block state_change (nano::test_genesis_key.pub, state_receive.hash (), nano::test_genesis_key.pub, nano::genesis_amount, 0, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_receive.hash ()));
-	nano::state_block state_send_change (nano::test_genesis_key.pub, state_change.hash (), key1.pub, nano::genesis_amount - nano::Gxrb_ratio, key1.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_change.hash ()));
+	nano::state_block state_send_change (nano::test_genesis_key.pub, state_change.hash (), key1.pub, nano::genesis_amount - nano::gFLR_ratio, key1.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_change.hash ())); // gFLR_ratio changed from Gxrb_ratio
 	nano::state_block epoch_first (key1.pub, 0, 0, 0, network_params.ledger.epochs.link (nano::epoch::epoch_2), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (key1.pub));
-	nano::state_block state_receive2 (key1.pub, epoch_first.hash (), key1.pub, nano::Gxrb_ratio, state_send_change.hash (), key1.prv, key1.pub, *pool.generate (epoch_first.hash ()));
-	nano::state_block state_send2 (nano::test_genesis_key.pub, state_send_change.hash (), key1.pub, nano::genesis_amount - nano::Gxrb_ratio * 2, key2.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_send_change.hash ()));
-	nano::state_block state_open (key2.pub, 0, key2.pub, nano::Gxrb_ratio, state_send2.hash (), key2.prv, key2.pub, *pool.generate (key2.pub));
+	nano::state_block state_receive2 (key1.pub, epoch_first.hash (), key1.pub, nano::gFLR_ratio, state_send_change.hash (), key1.prv, key1.pub, *pool.generate (epoch_first.hash ()));
+	nano::state_block state_send2 (nano::test_genesis_key.pub, state_send_change.hash (), key1.pub, nano::genesis_amount - nano::gFLR_ratio * 2, key2.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *pool.generate (state_send_change.hash ())); // gFLR_ratio changed from Gxrb_ratio
+	nano::state_block state_open (key2.pub, 0, key2.pub, nano::gFLR_ratio, state_send2.hash (), key2.prv, key2.pub, *pool.generate (key2.pub)); // gFLR_ratio changed from Gxrb_ratio
 	nano::state_block state_send_epoch_link (key2.pub, state_open.hash (), key2.pub, 0, network_params.ledger.epochs.link (nano::epoch::epoch_2), key2.prv, key2.pub, *pool.generate (state_open.hash ()));
 	{
 		nano::logger_mt logger;

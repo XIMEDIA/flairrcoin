@@ -13,3 +13,10 @@ enable = true
 # Enable or disable RPC.
 # type:bool
 enable = true
+port = "7096"
+
+[node]
+
+# Enable or disable voting. Enabling this option requires additional system resources, namely increased CPU, bandwidth and disk usage.
+# type:bool
+enable_voting = true

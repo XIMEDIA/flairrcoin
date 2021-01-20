@@ -415,7 +415,9 @@ node_seq (seq)
 				ledger.bootstrap_weights = bootstrap_weights.second;
 				for (auto const & rep : ledger.bootstrap_weights)
 				{
-					logger.always_log ("Using bootstrap rep weight: ", rep.first.to_account (), " -> ", nano::uint128_union (rep.second).format_balance (Mxrb_ratio, 0, true), " XRB");
+					// [mFLR_ratio]- changed from [Mxrb_ratio]
+					// [FLR] changed from [XRB]
+					logger.always_log ("Using bootstrap rep weight: ", rep.first.to_account (), " -> ", nano::uint128_union (rep.second).format_balance (mFLR_ratio, 0, true), " FLR");
 				}
 			}
 			ledger.bootstrap_weight_max_blocks = bootstrap_weights.first;
@@ -979,13 +981,16 @@ void nano::node::ongoing_unchecked_cleanup ()
 
 int nano::node::price (nano::uint128_t const & balance_a, int amount_a)
 {
-	debug_assert (balance_a >= amount_a * nano::Gxrb_ratio);
+	// [gFLR_ratio]- changed from [Gxrb_ratio]
+	debug_assert (balance_a >= amount_a * nano::gFLR_ratio);
 	auto balance_l (balance_a);
 	double result (0.0);
 	for (auto i (0); i < amount_a; ++i)
 	{
-		balance_l -= nano::Gxrb_ratio;
-		auto balance_scaled ((balance_l / nano::Mxrb_ratio).convert_to<double> ());
+		// [gFLR_ratio]- changed from [Gxrb_ratio]
+		balance_l -= nano::gFLR_ratio;
+		// [mFLR_ratio]- changed from [Mxrb_ratio]
+		auto balance_scaled ((balance_l / nano::mFLR_ratio).convert_to<double> ());
 		auto units (balance_scaled / 1000.0);
 		auto unit_price (((free_cutoff - units) / free_cutoff) * price_max);
 		result += std::min (std::max (0.0, unit_price), price_max);

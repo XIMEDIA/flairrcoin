@@ -205,7 +205,7 @@ TEST (active_transactions, inactive_votes_cache_fork)
 	}
 	ASSERT_EQ (1, node.stats.count (nano::stat::type::election, nano::stat::detail::vote_cached));
 }
-
+// gFLR_ratio changed from Gxrb_ratio
 TEST (active_transactions, inactive_votes_cache_existing_vote)
 {
 	nano::system system;
@@ -214,8 +214,8 @@ TEST (active_transactions, inactive_votes_cache_existing_vote)
 	auto & node = *system.add_node (node_config);
 	nano::block_hash latest (node.latest (nano::test_genesis_key.pub));
 	nano::keypair key;
-	auto send (std::make_shared<nano::send_block> (latest, key.pub, nano::genesis_amount - 100 * nano::Gxrb_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (latest)));
-	auto open (std::make_shared<nano::state_block> (key.pub, 0, key.pub, 100 * nano::Gxrb_ratio, send->hash (), key.prv, key.pub, *system.work.generate (key.pub))); // Increase key weight
+	auto send (std::make_shared<nano::send_block> (latest, key.pub, nano::genesis_amount - 100 * nano::gFLR_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (latest)));
+	auto open (std::make_shared<nano::state_block> (key.pub, 0, key.pub, 100 * nano::gFLR_ratio, send->hash (), key.prv, key.pub, *system.work.generate (key.pub))); // Increase key weight
 	node.process_active (send);
 	node.block_processor.add (open);
 	node.block_processor.flush ();
@@ -261,7 +261,7 @@ TEST (active_transactions, inactive_votes_cache_existing_vote)
 	ASSERT_EQ (last_vote1.time, last_vote2.time);
 	ASSERT_EQ (0, node.stats.count (nano::stat::type::election, nano::stat::detail::vote_cached));
 }
-
+// gFLR_ratio changed from Gxrb_ratio
 TEST (active_transactions, inactive_votes_cache_multiple_votes)
 {
 	nano::system system;
@@ -270,9 +270,9 @@ TEST (active_transactions, inactive_votes_cache_multiple_votes)
 	auto & node = *system.add_node (node_config);
 	nano::block_hash latest (node.latest (nano::test_genesis_key.pub));
 	nano::keypair key1;
-	auto send1 (std::make_shared<nano::send_block> (latest, key1.pub, nano::genesis_amount - 100 * nano::Gxrb_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (latest)));
-	auto send2 (std::make_shared<nano::send_block> (send1->hash (), key1.pub, 100 * nano::Gxrb_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send1->hash ()))); // Decrease genesis weight to prevent election confirmation
-	auto open (std::make_shared<nano::state_block> (key1.pub, 0, key1.pub, 100 * nano::Gxrb_ratio, send1->hash (), key1.prv, key1.pub, *system.work.generate (key1.pub))); // Increase key1 weight
+	auto send1 (std::make_shared<nano::send_block> (latest, key1.pub, nano::genesis_amount - 100 * nano::gFLR_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (latest)));
+	auto send2 (std::make_shared<nano::send_block> (send1->hash (), key1.pub, 100 * nano::gFLR_ratio, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send1->hash ()))); // Decrease genesis weight to prevent election confirmation
+	auto open (std::make_shared<nano::state_block> (key1.pub, 0, key1.pub, 100 * nano::gFLR_ratio, send1->hash (), key1.prv, key1.pub, *system.work.generate (key1.pub))); // Increase key1 weight
 	node.block_processor.add (send1);
 	node.block_processor.add (send2);
 	node.block_processor.add (open);
@@ -319,35 +319,35 @@ TEST (active_transactions, inactive_votes_cache_election_start)
 	std::shared_ptr<nano::block> send1 = send_block_builder.make_block ()
 	                                     .previous (latest)
 	                                     .destination (key1.pub)
-	                                     .balance (nano::genesis_amount - 2000 * nano::Gxrb_ratio)
+	                                     .balance (nano::genesis_amount - 2000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .sign (nano::test_genesis_key.prv, nano::test_genesis_key.pub)
 	                                     .work (*system.work.generate (latest))
 	                                     .build ();
 	std::shared_ptr<nano::block> send2 = send_block_builder.make_block ()
 	                                     .previous (send1->hash ())
 	                                     .destination (key2.pub)
-	                                     .balance (nano::genesis_amount - 4000 * nano::Gxrb_ratio)
+	                                     .balance (nano::genesis_amount - 4000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .sign (nano::test_genesis_key.prv, nano::test_genesis_key.pub)
 	                                     .work (*system.work.generate (send1->hash ()))
 	                                     .build ();
 	std::shared_ptr<nano::block> send3 = send_block_builder.make_block ()
 	                                     .previous (send2->hash ())
 	                                     .destination (key3.pub)
-	                                     .balance (nano::genesis_amount - 6000 * nano::Gxrb_ratio)
+	             						 .balance (nano::genesis_amount - 6000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .sign (nano::test_genesis_key.prv, nano::test_genesis_key.pub)
 	                                     .work (*system.work.generate (send2->hash ()))
 	                                     .build ();
 	std::shared_ptr<nano::block> send4 = send_block_builder.make_block ()
 	                                     .previous (send3->hash ())
 	                                     .destination (key4.pub)
-	                                     .balance (nano::genesis_amount - 8000 * nano::Gxrb_ratio)
+	             						 .balance (nano::genesis_amount - 8000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .sign (nano::test_genesis_key.prv, nano::test_genesis_key.pub)
 	                                     .work (*system.work.generate (send3->hash ()))
 	                                     .build ();
 	std::shared_ptr<nano::block> send5 = send_block_builder.make_block ()
 	                                     .previous (send4->hash ())
 	                                     .destination (key5.pub)
-	                                     .balance (nano::genesis_amount - 10000 * nano::Gxrb_ratio)
+	             						 .balance (nano::genesis_amount - 10000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .sign (nano::test_genesis_key.prv, nano::test_genesis_key.pub)
 	                                     .work (*system.work.generate (send4->hash ()))
 	                                     .build ();
@@ -355,7 +355,7 @@ TEST (active_transactions, inactive_votes_cache_election_start)
 	                                     .account (key1.pub)
 	                                     .previous (0)
 	                                     .representative (key1.pub)
-	                                     .balance (2000 * nano::Gxrb_ratio)
+	                                     .balance (2000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .link (send1->hash ())
 	                                     .sign (key1.prv, key1.pub)
 	                                     .work (*system.work.generate (key1.pub))
@@ -364,7 +364,7 @@ TEST (active_transactions, inactive_votes_cache_election_start)
 	                                     .account (key2.pub)
 	                                     .previous (0)
 	                                     .representative (key2.pub)
-	                                     .balance (2000 * nano::Gxrb_ratio)
+	                                     .balance (2000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .link (send2->hash ())
 	                                     .sign (key2.prv, key2.pub)
 	                                     .work (*system.work.generate (key2.pub))
@@ -373,7 +373,7 @@ TEST (active_transactions, inactive_votes_cache_election_start)
 	                                     .account (key3.pub)
 	                                     .previous (0)
 	                                     .representative (key3.pub)
-	                                     .balance (2000 * nano::Gxrb_ratio)
+	                                     .balance (2000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .link (send3->hash ())
 	                                     .sign (key3.prv, key3.pub)
 	                                     .work (*system.work.generate (key3.pub))
@@ -382,7 +382,7 @@ TEST (active_transactions, inactive_votes_cache_election_start)
 	                                     .account (key4.pub)
 	                                     .previous (0)
 	                                     .representative (key4.pub)
-	                                     .balance (2000 * nano::Gxrb_ratio)
+	                                     .balance (2000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .link (send4->hash ())
 	                                     .sign (key4.prv, key4.pub)
 	                                     .work (*system.work.generate (key4.pub))
@@ -391,7 +391,7 @@ TEST (active_transactions, inactive_votes_cache_election_start)
 	                                     .account (key5.pub)
 	                                     .previous (0)
 	                                     .representative (key5.pub)
-	                                     .balance (2000 * nano::Gxrb_ratio)
+	                                     .balance (2000 * nano::gFLR_ratio) // gFLR_ratio changed from Gxrb_ratio
 	                                     .link (send5->hash ())
 	                                     .sign (key5.prv, key5.pub)
 	                                     .work (*system.work.generate (key5.pub))
@@ -529,7 +529,7 @@ TEST (active_transactions, update_difficulty)
 		ASSERT_NO_ERROR (system.poll ());
 	}
 }
-
+// gFLR_ratio changed from Gxrb_ratio
 namespace nano
 {
 TEST (active_transactions, vote_replays)
@@ -542,9 +542,9 @@ TEST (active_transactions, vote_replays)
 	nano::genesis genesis;
 	nano::keypair key;
 	std::error_code ec;
-	auto send1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
+	auto send1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
 	ASSERT_NE (nullptr, send1);
-	auto open1 (std::make_shared<nano::state_block> (key.pub, 0, key.pub, nano::Gxrb_ratio, send1->hash (), key.prv, key.pub, *system.work.generate (key.pub)));
+	auto open1 (std::make_shared<nano::state_block> (key.pub, 0, key.pub, nano::gFLR_ratio, send1->hash (), key.prv, key.pub, *system.work.generate (key.pub)));
 	ASSERT_NE (nullptr, open1);
 	node.process_active (send1);
 	node.process_active (open1);
@@ -565,9 +565,9 @@ TEST (active_transactions, vote_replays)
 	ASSERT_EQ (nano::vote_code::replay, node.active.vote (vote_open1));
 	ASSERT_TIMELY (3s, node.active.empty ());
 	ASSERT_EQ (nano::vote_code::replay, node.active.vote (vote_open1));
-	ASSERT_EQ (nano::Gxrb_ratio, node.ledger.weight (key.pub));
-
-	auto send2 (std::make_shared<nano::state_block> (key.pub, open1->hash (), key.pub, nano::Gxrb_ratio - 1, key.pub, key.prv, key.pub, *system.work.generate (open1->hash ())));
+	ASSERT_EQ (nano::gFLR_ratio, node.ledger.weight (key.pub)); // gFLR_ratio changed from Gxrb_ration
+	// gFLR_ratio changed from Gxrb_ratio
+	auto send2 (std::make_shared<nano::state_block> (key.pub, open1->hash (), key.pub, nano::gFLR_ratio - 1, key.pub, key.prv, key.pub, *system.work.generate (open1->hash ())));
 	ASSERT_NE (nullptr, send2);
 	node.process_active (send2);
 	nano::blocks_confirm (node, { send2 });
@@ -680,6 +680,7 @@ TEST (active_transactions, confirmation_consistency)
 }
 }
 
+// FLR_ratio changed from xrb_ratio)
 TEST (active_transactions, insertion_prioritization)
 {
 	nano::system system;
@@ -689,13 +690,13 @@ TEST (active_transactions, insertion_prioritization)
 	nano::node_flags node_flags;
 	node_flags.disable_request_loop = true;
 	auto & node = *system.add_node (node_config, node_flags);
-	auto send1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, nano::genesis_hash, nano::test_genesis_key.pub, nano::genesis_amount - 10 * nano::xrb_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (nano::genesis_hash)));
-	auto send2 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send1->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 20 * nano::xrb_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send1->hash ())));
-	auto send3 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send2->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 30 * nano::xrb_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send2->hash ())));
-	auto send4 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send3->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 40 * nano::xrb_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send3->hash ())));
-	auto send5 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send4->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 50 * nano::xrb_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send4->hash ())));
-	auto send6 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send5->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 60 * nano::xrb_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send5->hash ())));
-	auto send7 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send6->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 70 * nano::xrb_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send6->hash ())));
+	auto send1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, nano::genesis_hash, nano::test_genesis_key.pub, nano::genesis_amount - 10 * nano::FLR_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (nano::genesis_hash)));
+	auto send2 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send1->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 20 * nano::FLR_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send1->hash ())));
+	auto send3 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send2->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 30 * nano::FLR_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send2->hash ())));
+	auto send4 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send3->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 40 * nano::FLR_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send3->hash ())));
+	auto send5 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send4->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 50 * nano::FLR_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send4->hash ())));
+	auto send6 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send5->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 60 * nano::FLR_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send5->hash ())));
+	auto send7 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send6->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 70 * nano::FLR_ratio, nano::public_key (), nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send6->hash ())));
 
 	// Sort by difficulty, descending
 	std::vector<std::shared_ptr<nano::block>> blocks{ send1, send2, send3, send4, send5, send6, send7 };
@@ -842,7 +843,7 @@ TEST (active_transactions, vote_generator_session)
 	}
 }
 }
-
+// FLR_ratio changed from xrb_ratio)
 TEST (active_transactions, election_difficulty_update_old)
 {
 	nano::system system;
@@ -851,7 +852,7 @@ TEST (active_transactions, election_difficulty_update_old)
 	auto & node = *system.add_node (node_flags);
 	nano::genesis genesis;
 	nano::keypair key;
-	auto send1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - 10 * nano::xrb_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
+	auto send1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - 10 * nano::FLR_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
 	auto send1_copy (std::make_shared<nano::state_block> (*send1));
 	node.process_active (send1);
 	node.block_processor.flush ();
@@ -878,7 +879,7 @@ TEST (active_transactions, election_difficulty_update_old)
 
 	ASSERT_EQ (1, node.stats.count (nano::stat::type::election, nano::stat::detail::election_difficulty_update));
 }
-
+// gFLR_ratio changed from Gxrb_ratio
 TEST (active_transactions, election_difficulty_update_fork)
 {
 	nano::system system;
@@ -890,9 +891,9 @@ TEST (active_transactions, election_difficulty_update_fork)
 	auto epoch2 = system.upgrade_genesis_epoch (node, nano::epoch::epoch_2);
 	ASSERT_NE (nullptr, epoch2);
 	nano::keypair key;
-	auto send1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, epoch2->hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::Gxrb_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (epoch2->hash ())));
-	auto open1 (std::make_shared<nano::state_block> (key.pub, 0, key.pub, nano::Gxrb_ratio, send1->hash (), key.prv, key.pub, *system.work.generate (key.pub)));
-	auto send2 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send1->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 2 * nano::Gxrb_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send1->hash ())));
+	auto send1 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, epoch2->hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::gFLR_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (epoch2->hash ())));
+	auto open1 (std::make_shared<nano::state_block> (key.pub, 0, key.pub, nano::gFLR_ratio, send1->hash (), key.prv, key.pub, *system.work.generate (key.pub)));
+	auto send2 (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, send1->hash (), nano::test_genesis_key.pub, nano::genesis_amount - 2 * nano::gFLR_ratio, key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (send1->hash ())));
 	ASSERT_EQ (nano::process_result::progress, node.process (*send1).code);
 	ASSERT_EQ (nano::process_result::progress, node.process (*open1).code);
 	ASSERT_EQ (nano::process_result::progress, node.process (*send2).code);
@@ -909,12 +910,12 @@ TEST (active_transactions, election_difficulty_update_fork)
 		ASSERT_TIMELY (2s, node.block_confirmed (block->hash ()));
 		node.active.erase (*block);
 	}
-
 	// Verify an election with multiple blocks is correctly updated on arrival of another block
 	// Each subsequent block has difficulty at least higher than the previous one
-	auto fork_change (std::make_shared<nano::state_block> (key.pub, open1->hash (), nano::test_genesis_key.pub, nano::Gxrb_ratio, 0, key.prv, key.pub, *system.work.generate (open1->hash ())));
+	// gFLR_ratio changed from Gxrb_ratio
+	auto fork_change (std::make_shared<nano::state_block> (key.pub, open1->hash (), nano::test_genesis_key.pub, nano::gFLR_ratio, 0, key.prv, key.pub, *system.work.generate (open1->hash ())));
 	auto fork_send (std::make_shared<nano::state_block> (key.pub, open1->hash (), key.pub, 0, key.pub, key.prv, key.pub, *system.work.generate (open1->hash (), fork_change->difficulty ())));
-	auto fork_receive (std::make_shared<nano::state_block> (key.pub, open1->hash (), key.pub, 2 * nano::Gxrb_ratio, send2->hash (), key.prv, key.pub, *system.work.generate (open1->hash (), fork_send->difficulty ())));
+	auto fork_receive (std::make_shared<nano::state_block> (key.pub, open1->hash (), key.pub, 2 * nano::gFLR_ratio, send2->hash (), key.prv, key.pub, *system.work.generate (open1->hash (), fork_send->difficulty ())));
 	ASSERT_GT (fork_send->difficulty (), fork_change->difficulty ());
 	ASSERT_GT (fork_receive->difficulty (), fork_send->difficulty ());
 
@@ -979,7 +980,7 @@ TEST (active_transactions, confirm_new)
 		ASSERT_NO_ERROR (system.poll ());
 	}
 }
-
+// FLR_ratio changed from xrb_ratio)
 TEST (active_transactions, restart_dropped)
 {
 	nano::system system;
@@ -987,7 +988,7 @@ TEST (active_transactions, restart_dropped)
 	node_config.frontiers_confirmation = nano::frontiers_confirmation_mode::disabled;
 	auto & node = *system.add_node (node_config);
 	nano::genesis genesis;
-	auto send (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::xrb_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
+	auto send (std::make_shared<nano::state_block> (nano::test_genesis_key.pub, genesis.hash (), nano::test_genesis_key.pub, nano::genesis_amount - nano::FLR_ratio, nano::test_genesis_key.pub, nano::test_genesis_key.prv, nano::test_genesis_key.pub, *system.work.generate (genesis.hash ())));
 	// Process only in ledger and simulate dropping the election
 	ASSERT_EQ (nano::process_result::progress, node.process (*send).code);
 	node.active.recently_dropped.add (send->qualified_root ());

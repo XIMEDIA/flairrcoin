@@ -85,7 +85,8 @@ void nano::port_mapping::refresh_mapping ()
 		for (auto & protocol : protocols | boost::adaptors::filtered ([](auto const & p) { return p.enabled; }))
 		{
 			auto const lease_duration = std::chrono::duration_cast<std::chrono::seconds> (network_params.portmapping.lease_duration);
-			auto upnp_description = std::string ("Nano Node (") + network_params.network.get_current_network_as_string () + ")";
+			// Flairrcoin changed from Nano
+			auto upnp_description = std::string ("Flairrcoin Node (") + network_params.network.get_current_network_as_string () + ")";
 			auto add_port_mapping_error_l (UPNP_AddPortMapping (upnp.urls.controlURL, upnp.data.first.servicetype, config_port_l.c_str (), node_port_l.c_str (), address.to_string ().c_str (), upnp_description.c_str (), protocol.name, nullptr, std::to_string (lease_duration.count ()).c_str ()));
 			if (node.config.logging.upnp_details_logging ())
 			{
